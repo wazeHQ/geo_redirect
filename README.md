@@ -73,6 +73,8 @@ You can download the database file [directly from MaxMind](http://geolite.maxmin
 
 	$ rake georedirect:fetch_db
 
+It'd be a good idea to use this task on your (Capistrano or whatever) deployment scripts.
+
 ### Custom paths
 
 The default paths for these files are:
@@ -82,7 +84,7 @@ The default paths for these files are:
 
 If that doesn't suit you, you can customize these when adding `GeoRedirect` to your project:
 
-	  Rails.application.middleware.use GeoRedirect::Middleware {
+	  Rails.application.middleware.use GeoRedirect::Middleware, {
 	  	:db => 'db/geo_database.dat',
 	  	:config => 'geo_cfg.yml'
 	  }
