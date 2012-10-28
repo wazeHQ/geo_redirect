@@ -4,7 +4,7 @@ require 'geo_redirect/version'
 
 module GeoRedirect
   # Load rake tasks
-  require 'geo_redirect/railtie.rb' if defined?(Rails)
+  require 'geo_redirect/railtie' if defined?(Rails)
 
   # Rack middleware
   class Middleware
@@ -49,18 +49,30 @@ module GeoRedirect
       url     = URI.parse(request.url)
       query   = CGI::parse(url.query || '')
 
-      country = nil
-      #TODO check for session cookie
+      # check for session var
+      @log.debug "session = #{request.session}"
+      if request.session[:geo_redirect]
+        host = request.session[:geo_redirect]
+        @log.debug "!! remembered #{host} !!"
+        if @config[host].present?
+          return redirect_request(request, env, host)
+        else
+          # Invalid session var, remove it
+          remember_host(request, nil)
+        end
+      end
 
       # Handle ?redirect=1 forcing
       if query.key?('redirect')
-        remember_host(url.host)
+        host = host_by_hostname(url.host)
+        remember_host(request, host)
         #TODO remove ?redirect=1 (by redirect)
+        #     query.delete('redirect').to_param (sort-of)
 
       else
         # Fetch country code
         begin
-          env['REMOTE_ADDR'] = '192.117.10.52'
+          env['REMOTE_ADDR'] = '192.117.10.52' #TODO remove me
           res     = @db.country(env['REMOTE_ADDR'])
           code    = res.try(:country_code)
           country = res.try(:country_code2) unless code.nil? || code.zero?
@@ -70,11 +82,10 @@ module GeoRedirect
       end
 
       unless country.nil?
-        # Desired host
-        desired = host_by_country(country)
-        remember_host(desired)
+        host = host_by_country(country) # desired host
+        remember_host(request, host)
 
-        return redirect_request(request, desired, env)
+        return redirect_request(request, env, host)
       end
 
       # Carry on
@@ -82,32 +93,36 @@ module GeoRedirect
     end
 
     protected
-    def redirect_request(request, host, env)
-      # Compare with current host
-      unless request.host.ends_with?(host)
-        # Wrong host, redirect
-        url = URI.parse(request.url).tap { |u|
-          u.host = host
-          u.port = nil
-        }
-        [301, {'Location' => url.to_s}, self]
-      else
-        @app.call(env)
+    def redirect_request(request, env, host=nil)
+      if @config[host].present? # Valid host key
+        # Compare with current host
+        unless request.host.ends_with?(host)
+          url = URI.parse(request.url).tap
+          url.port = nil
+          url.host = @config[host][:host] if host
+
+          @log.debug "~~ supposed to redirect to #{url} ~~"
+          return [301, {'Location' => url.to_s}, self]
+        end
       end
+
+      # otherwise, carry on
+      @app.call(env)
     end
 
-    def host_by_country(code)
-      hosts    = @config[:countries].select { |k, o| o.include?(code) }
-      host_key = hosts.try(:keys).try(:first)
-
-      # Fallback to :default if no host found
-      host_key = :default if (host_key.nil? || !@config[:hosts].key?(host_key))
-
-      @config[:hosts][host_key]
+    def host_by_country(country)
+      hosts = @config.select { |k, v| Array(v[:countries]).include?(country) }
+      hosts.keys.first || :default
     end
 
-    def remember_host(host)
+    def host_by_hostname(hostname)
+      hosts = @config.select { |k, v| v[:host] == hostname }
+      hosts.keys.first || :default
+    end
+
+    def remember_host(request, host)
       @log.debug "-- supposed to remember #{host} --"
+      request.session[:geo_redirect] = host
     end
   end
 end
