@@ -38,9 +38,6 @@ module GeoRedirect
         puts "GeoRedirect middlware."
         raise e
       end
-
-      #TODO remove me
-      @log = Logger.new('/tmp/geo.log')
     end
 
     def call(env)
@@ -58,23 +55,17 @@ module GeoRedirect
     end
 
     def session_exists?
-      @log.debug "-- session exists? --"
       host = @request.session['geo_redirect']
       if host.present? && @config[host].nil? # Invalid var, remove it
-        @log.debug "-- invalid #{host} --"
         forget_host
         host = nil
       end
-
-      @log.debug "-- session? #{host} --"
 
       host.present?
     end
 
     def handle_session
       host = @request.session['geo_redirect']
-      @log.debug "!! remembered #{host} !!"
-
       redirect_request(host)
     end
 
@@ -86,7 +77,6 @@ module GeoRedirect
     def handle_force
       url = URI.parse(@request.url)
       host = host_by_hostname(url.host)
-      @log.debug "++ forcing #{host} ++"
       remember_host(host)
       redirect_request(url.host, true)
     end
@@ -94,7 +84,6 @@ module GeoRedirect
     def handle_geoip
       # Fetch country code
       begin
-        @request.env['REMOTE_ADDR'] = '192.117.10.52' #TODO remove me
         res     = @db.country(@request.env['REMOTE_ADDR'])
         code    = res.try(:country_code)
         country = res.try(:country_code2) unless code.nil? || code.zero?
@@ -104,7 +93,6 @@ module GeoRedirect
 
       unless country.nil?
         host = host_by_country(country) # desired host
-        @log.debug "[[ geo #{host} ]]"
         remember_host(host)
 
         redirect_request(host)
@@ -131,7 +119,6 @@ module GeoRedirect
         }.to_param
         url.query = nil if url.query.empty?
 
-        @log.debug "~~ redirecting to #{url} ~~"
         [301, {'Location' => url.to_s}, ['Moved Permanently\n']]
       else
         @app.call(@request.env)
@@ -149,9 +136,7 @@ module GeoRedirect
     end
 
     def remember_host(host)
-      @log.debug "-- supposed to remember #{host} --"
       @request.session['geo_redirect'] = host
-      @log.debug "-- now it's #{@request.session['geo_redirect']} --"
     end
 
     def forget_host
