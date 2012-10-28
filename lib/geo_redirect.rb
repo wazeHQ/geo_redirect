@@ -89,7 +89,7 @@ module GeoRedirect
       host = host_by_hostname(url.host)
       @log.debug "++ forcing #{host} ++"
       remember_host(host)
-      redirect_request(host, true)
+      redirect_request(url.host, true)
     end
 
     def handle_geoip
@@ -117,7 +117,7 @@ module GeoRedirect
     def redirect_request(host=nil, same_host=false)
       redirect = true
       unless host.nil?
-        hostname = @config[host][:host]
+        hostname = host.is_a?(Symbol) ? @config[host][:host] : host
         redirect = hostname.present?
         redirect &&= !@request.host.ends_with?(hostname) unless same_host
       end
