@@ -46,11 +46,11 @@ module GeoRedirect
     def call(env)
       @request = Rack::Request.new(env)
 
-      if session_exists?
-        handle_session
-
-      elsif force_redirect?
+      if force_redirect?
         handle_force
+
+      elsif session_exists?
+        handle_session
 
       else
         handle_geoip
@@ -85,6 +85,7 @@ module GeoRedirect
     end
 
     def handle_force
+      url = URI.parse(@request.url)
       host = host_by_hostname(url.host)
       @log.debug "++ forcing #{host} ++"
       remember_host(host)
@@ -129,6 +130,7 @@ module GeoRedirect
         url.query = Rack::Utils.parse_query(url.query).tap{ |u|
           u.delete('redirect')
         }.to_param
+        url.query = nil if url.query.empty?
 
         @log.debug "~~ redirecting to #{url} ~~"
         [301, {'Location' => url.to_s}, self]
