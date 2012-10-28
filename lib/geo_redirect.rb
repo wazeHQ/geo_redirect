@@ -38,36 +38,47 @@ module GeoRedirect
         puts "GeoRedirect middlware."
         raise e
       end
+
+      #TODO remove me
+      @log = Logger.new('/tmp/geo.log')
     end
 
     def call(env)
       # Current request
       request = Rack::Request.new(env)
+      url     = URI.parse(request.url)
+      query   = CGI::parse(url.query || '')
 
-      #TODO check for session cookie
-      #TODO handle ?redirect=1
-
-      # Fetch country code
       country = nil
-      begin
-        res     = @db.country(env['REMOTE_ADDR'])
-        code    = res.try(:country_code)
-        country = res.try(:country_code2) unless code.nil? || code.zero?
-      rescue
-        country = nil
+      #TODO check for session cookie
+
+      # Handle ?redirect=1 forcing
+      if query.key?('redirect')
+        remember_host(url.host)
+        #TODO remove ?redirect=1 (by redirect)
+
+      else
+        # Fetch country code
+        begin
+          env['REMOTE_ADDR'] = '192.117.10.52'
+          res     = @db.country(env['REMOTE_ADDR'])
+          code    = res.try(:country_code)
+          country = res.try(:country_code2) unless code.nil? || code.zero?
+        rescue
+          country = nil
+        end
       end
 
       unless country.nil?
         # Desired host
         desired = host_by_country(country)
+        remember_host(desired)
 
         # Compare with current host
         unless request.host.ends_with?(desired)
           # Wrong host, redirect
-          url = URI.parse(request.url).tap { |u|
-            u.host = desired
-            u.port = nil # use default port at second host
-          }
+          url.host = desired
+          url.port = nil # use default port at second host
           return [301, {'Location' => url.to_s}, self]
         end
       end
@@ -85,6 +96,10 @@ module GeoRedirect
       host_key = :default if (host_key.nil? || !@config[:hosts].key?(host_key))
 
       @config[:hosts][host_key]
+    end
+
+    def remember_host(host)
+      @log.debug "-- supposed to remember #{host} --"
     end
   end
 end
