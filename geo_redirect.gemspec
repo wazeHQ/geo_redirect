@@ -6,11 +6,13 @@ require 'geo_redirect/version'
 Gem::Specification.new do |gem|
   gem.name          = "geo_redirect"
   gem.version       = GeoRedirect::VERSION
-  gem.authors       = ["TODO: Write your name"]
-  gem.email         = ["TODO: Write your email address"]
-  gem.description   = %q{TODO: Write a gem description}
-  gem.summary       = %q{TODO: Write a gem summary}
+  gem.authors       = ["Sagie Maoz"]
+  gem.email         = ["sagie@waze.com"]
+  gem.description   = %q{Geo-location based redirector}
+  gem.summary       = %q{Redirects users to hosts based on geolocation.}
   gem.homepage      = ""
+
+  gem.add_dependency "geoip"
 
   gem.files         = `git ls-files`.split($/)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
