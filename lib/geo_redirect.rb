@@ -55,7 +55,6 @@ module GeoRedirect
       else
         handle_geoip
       end
-
     end
 
     def session_exists?
@@ -126,14 +125,14 @@ module GeoRedirect
         url = URI.parse(@request.url)
         url.port = nil
         url.host = hostname if host
-        # remove 'redirect=1' GET arg
+        # Remove 'redirect' GET arg
         url.query = Rack::Utils.parse_query(url.query).tap{ |u|
           u.delete('redirect')
         }.to_param
         url.query = nil if url.query.empty?
 
         @log.debug "~~ redirecting to #{url} ~~"
-        [301, {'Location' => url.to_s}, self]
+        [301, {'Location' => url.to_s}, ['Moved Permanently\n']]
       else
         @app.call(@request.env)
       end

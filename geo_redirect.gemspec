@@ -9,7 +9,7 @@ Gem::Specification.new do |gem|
   gem.authors       = ["Sagie Maoz"]
   gem.email         = ["sagie@waze.com"]
   gem.description   = %q{Geo-location based redirector}
-  gem.summary       = %q{Redirects users to hosts based on geolocation.}
+  gem.summary       = %q{Rack middleware to redirect clients to hostnames based on geo-location}
   gem.homepage      = ""
 
   gem.add_dependency "geoip"
