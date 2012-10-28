@@ -74,13 +74,7 @@ module GeoRedirect
         desired = host_by_country(country)
         remember_host(desired)
 
-        # Compare with current host
-        unless request.host.ends_with?(desired)
-          # Wrong host, redirect
-          url.host = desired
-          url.port = nil # use default port at second host
-          return [301, {'Location' => url.to_s}, self]
-        end
+        return redirect_request(request, desired, env)
       end
 
       # Carry on
@@ -88,6 +82,20 @@ module GeoRedirect
     end
 
     protected
+    def redirect_request(request, host, env)
+      # Compare with current host
+      unless request.host.ends_with?(host)
+        # Wrong host, redirect
+        url = URI.parse(request.url).tap { |u|
+          u.host = host
+          u.port = nil
+        }
+        [301, {'Location' => url.to_s}, self]
+      else
+        @app.call(env)
+      end
+    end
+
     def host_by_country(code)
       hosts    = @config[:countries].select { |k, o| o.include?(code) }
       host_key = hosts.try(:keys).try(:first)
