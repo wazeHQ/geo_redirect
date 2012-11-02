@@ -119,7 +119,7 @@ module GeoRedirect
         }.to_param
         url.query = nil if url.query.empty?
 
-        [301, {'Location' => url.to_s}, ['Moved Permanently\n']]
+        [301, {'Location' => url.to_s, 'Content-Type' => ''}, ['Moved Permanently\n']]
       else
         @app.call(@request.env)
       end
