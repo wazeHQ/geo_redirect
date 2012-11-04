@@ -12,6 +12,7 @@ module GeoRedirect
       # Some defaults
       options[:db]     ||= 'db/GeoIP.dat'
       options[:config] ||= 'config/geo_redirect.yml'
+      @logfile = options[:logfile] || nil
 
       @app = app
 
@@ -38,6 +39,8 @@ module GeoRedirect
         puts "GeoRedirect middlware."
         raise e
       end
+
+      self.log "Initialized middleware"
     end
 
     def call(env)
@@ -57,6 +60,7 @@ module GeoRedirect
     def session_exists?
       host = @request.session['geo_redirect']
       if host.present? && @config[host].nil? # Invalid var, remove it
+        self.log "Invalid session var, forgetting"
         forget_host
         host = nil
       end
@@ -66,6 +70,7 @@ module GeoRedirect
 
     def handle_session
       host = @request.session['geo_redirect']
+      self.log "Handling session var: #{host}"
       redirect_request(host)
     end
 
@@ -77,6 +82,7 @@ module GeoRedirect
     def handle_force
       url = URI.parse(@request.url)
       host = host_by_hostname(url.host)
+      self.log "Handling force flag: #{host}"
       remember_host(host)
       redirect_request(url.host, true)
     end
@@ -84,15 +90,20 @@ module GeoRedirect
     def handle_geoip
       # Fetch country code
       begin
-        res     = @db.country(@request.env['HTTP_X_FORWARDED_FOR'] || @request.env['REMOTE_ADDR'])
+        ip_address = @request.env['HTTP_X_FORWARDED_FOR'] || @request.env['REMOTE_ADDR']
+        self.log "Handling GeoIP lookup: IP #{ip_address}"
+        res     = @db.country(ip_address)
         code    = res.try(:country_code)
         country = res.try(:country_code2) unless code.nil? || code.zero?
       rescue
         country = nil
       end
 
+      self.log "GeoIP match: country code #{country}"
+
       unless country.nil?
         host = host_by_country(country) # desired host
+        self.log "GeoIP host match: #{host}"
         remember_host(host)
 
         redirect_request(host)
@@ -119,7 +130,10 @@ module GeoRedirect
         }.to_param
         url.query = nil if url.query.empty?
 
-        [301, {'Location' => url.to_s, 'Content-Type' => 'text/plain'}, ['Moved Permanently\n']]
+        self.log "Redirecting to #{url}"
+        [301,
+         {'Location' => url.to_s, 'Content-Type' => 'text/plain'},
+         ['Moved Permanently\n']]
       else
         @app.call(@request.env)
       end
@@ -136,11 +150,21 @@ module GeoRedirect
     end
 
     def remember_host(host)
+      self.log "Remembering: #{host}"
       @request.session['geo_redirect'] = host
     end
 
     def forget_host
+      self.log "Forgetting: #{host}"
       remember_host(nil)
+    end
+
+    protected
+    def log(message)
+      unless @logfile.nil?
+        @logger ||= Logger.new(@logfile)
+        @logger.debug("[GeoRedirect] #{message}")
+      end
     end
   end
 end

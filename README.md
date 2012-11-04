@@ -89,6 +89,15 @@ If that doesn't suit you, you can customize these when adding `GeoRedirect` to y
 	  	:config => 'geo_cfg.yml'
 	  }
 
+### Debugging
+
+You can add a `logfile` path string when adding the middleware if you want it to log some of its decision process into the file.  
+This is useful when working on your configuration YAML.
+
+	Rails.application.middleware.use GeoRedirect::Middleware, :logfile => 'log/geo_redirect.log'
+
+`GeoRedirect`'s log messages will always be prefixed with `[GeoRedirect]`.
+
 ## Known Issues
 
 A couple issues I know about but haven't had the time to fix:
