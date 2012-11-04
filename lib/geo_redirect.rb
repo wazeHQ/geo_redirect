@@ -84,7 +84,7 @@ module GeoRedirect
     def handle_geoip
       # Fetch country code
       begin
-        res     = @db.country(@request.env['REMOTE_ADDR'])
+        res     = @db.country(@request.env['HTTP_X_FORWARDED_FOR'] || @request.env['REMOTE_ADDR'])
         code    = res.try(:country_code)
         country = res.try(:country_code2) unless code.nil? || code.zero?
       rescue
