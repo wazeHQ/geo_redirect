@@ -59,13 +59,13 @@ module GeoRedirect
 
     def session_exists?
       host = @request.session['geo_redirect']
-      if host.present? && @config[host].nil? # Invalid var, remove it
+      if host && @config[host].nil? # Invalid var, remove it
         self.log "Invalid session var, forgetting"
         forget_host
         host = nil
       end
 
-      host.present?
+      !host.nil?
     end
 
     def handle_session
@@ -117,8 +117,9 @@ module GeoRedirect
       redirect = true
       unless host.nil?
         hostname = host.is_a?(Symbol) ? @config[host][:host] : host
-        redirect = hostname.present?
-        redirect &&= !@request.host.ends_with?(hostname) unless same_host
+        redirect = !hostname.nil?
+        hostname_ends_with = %r{#{hostname.gsub(".", "\.")}$}
+        redirect &&= !!(@request.host =~ hostname_ends_with) unless same_host
       end
 
       if redirect
@@ -126,9 +127,10 @@ module GeoRedirect
         url.port = nil
         url.host = hostname if host
         # Remove 'redirect' GET arg
-        url.query = Rack::Utils.parse_query(url.query).tap{ |u|
+        query_hash = Rack::Utils.parse_query(url.query).tap{ |u|
           u.delete('redirect')
-        }.to_param
+        }
+        url.query = URI.encode_www_form(query_hash)
         url.query = nil if url.query.empty?
 
         self.log "Redirecting to #{url}"
