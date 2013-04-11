@@ -14,6 +14,9 @@ class Test::Unit::TestCase
   def app; Rack::Lint.new(@app); end
 
   def mock_app(options = {})
+    options = {:config => 'test/fixtures/config.yml',
+               :db => 'test/fixtures/GeoIP.dat'}.merge(options)
+
     main_app = lambda { |env|
       request = Rack::Request.new(env)
       headers = {'Content-Type' => "text/html"}

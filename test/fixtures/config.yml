@@ -1,0 +1,12 @@
+:us:
+  :host: 'biz.waze.com'
+  :countries: ['US', 'CA']
+
+:il:
+  :host: 'biz.waze.co.il'
+  :countries: ['IL']
+
+:world: &default
+  :host: 'biz-world.waze.com'
+
+:default: *default
