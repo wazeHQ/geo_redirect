@@ -14,29 +14,8 @@ module GeoRedirect
 
       @app = app
 
-      # Load GeoIP database
-      begin
-        @db = GeoIP.new(options[:db])
-      rescue Errno::EINVAL, Errno::ENOENT => e
-        puts "Could not load GeoIP database file."
-        puts "Please make sure you have a valid one and"
-        puts "add its name to the GeoRedirect middleware."
-        puts "Alternatively, use `rake georedirect:fetch_db`"
-        puts "to fetch it to the default location (under db/)."
-        raise e
-      end
-
-      # Load config object
-      begin
-        @config = YAML.load_file(options[:config])
-        raise Errno::EINVAL unless @config
-      rescue Errno::EINVAL, Errno::ENOENT => e
-        puts "Could not load GeoRedirect config YML file."
-        puts "Please make sure you have a valid YML file"
-        puts "and pass its name when adding the"
-        puts "GeoRedirect middlware."
-        raise e
-      end
+      @db     = load_db(options[:db])
+      @config = load_config(options[:config])
 
       self.log "Initialized middleware"
     end
@@ -166,6 +145,32 @@ module GeoRedirect
         @logger ||= Logger.new(@logfile)
         @logger.debug("[GeoRedirect] #{message}")
       end
+    end
+
+    def load_db(path)
+      begin
+        GeoIP.new(path)
+      rescue Errno::EINVAL, Errno::ENOENT => e
+        puts "Could not load GeoIP database file."
+        puts "Please make sure you have a valid one and"
+        puts "add its name to the GeoRedirect middleware."
+        puts "Alternatively, use `rake georedirect:fetch_db`"
+        puts "to fetch it to the default location (under db/)."
+        raise e
+      end
+    end
+
+    def load_config(path)
+      begin
+        (YAML.load_file(path)) || (raise Errno::EINVAL)
+      rescue Errno::EINVAL, Errno::ENOENT => e
+        puts "Could not load GeoRedirect config YML file."
+        puts "Please make sure you have a valid YML file"
+        puts "and pass its name when adding the"
+        puts "GeoRedirect middlware."
+        raise e
+      end
+
     end
   end
 end
