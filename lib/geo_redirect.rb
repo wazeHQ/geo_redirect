@@ -30,7 +30,7 @@ module GeoRedirect
 
       # Load config object
       begin
-        @config = YAML.load_file('config/geo_redirect.yml')
+        @config = YAML.load_file(options[:config])
         raise Errno::EINVAL unless @config
       rescue Errno::EINVAL, Errno::ENOENT => e
         puts "Could not load GeoRedirect config YML file."
