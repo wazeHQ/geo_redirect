@@ -6,6 +6,8 @@ module GeoRedirect
   DEFAULT_CONFIG_PATH = 'config/geo_redirect.yml'
 
   class Middleware
+    attr_accessor :db, :config
+
     def initialize(app, options = {})
       # Some defaults
       options[:db]     ||= DEFAULT_DB_PATH
