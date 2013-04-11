@@ -2,11 +2,14 @@ require 'yaml'
 require 'geoip'
 
 module GeoRedirect
+  DEFAULT_DB_PATH     = 'db/GeoIP.dat'
+  DEFAULT_CONFIG_PATH = 'config/geo_redirect.yml'
+
   class Middleware
     def initialize(app, options = {})
       # Some defaults
-      options[:db]     ||= 'db/GeoIP.dat'
-      options[:config] ||= 'config/geo_redirect.yml'
+      options[:db]     ||= DEFAULT_DB_PATH
+      options[:config] ||= DEFAULT_CONFIG_PATH
       @logfile = options[:logfile] || nil
 
       @app = app
