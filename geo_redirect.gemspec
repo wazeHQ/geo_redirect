@@ -14,6 +14,12 @@ Gem::Specification.new do |gem|
 
   gem.add_dependency "geoip"
 
+  gem.add_development_dependency "bundler",    "~> 1.2.1"
+  gem.add_development_dependency "test-unit",  "~> 2.5.4"
+  gem.add_development_dependency "shoulda",    "~> 3.4.0"
+  gem.add_development_dependency "rack",       "~> 1.5.2"
+  gem.add_development_dependency "rack-test",  "~> 0.6.2"
+
   gem.files         = `git ls-files`.split($/)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
