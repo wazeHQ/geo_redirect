@@ -10,20 +10,10 @@ describe GeoRedirect do
 
       @app.config.should_not be_nil
       @app.config.should eq({
-        :us => {
-          :host => 'biz.waze.com',
-          :countries => ['US', 'CA'],
-        },
-        :il => {
-          :host => 'biz.waze.co.il',
-          :countries => ['IL'],
-        },
-        :world => {
-          :host => 'biz-world.waze.com',
-        },
-        :default => {
-          :host => 'biz-world.waze.com',
-        },
+        :us => { :host => 'biz.waze.com',   :countries => ['US', 'CA'] },
+        :il => { :host => 'biz.waze.co.il', :countries => ['IL'] },
+        :world =>   { :host => 'biz-world.waze.com' },
+        :default => { :host => 'biz-world.waze.com' },
       })
     end
 
