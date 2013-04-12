@@ -138,7 +138,12 @@ describe GeoRedirect do
         env['rack.session']['geo_redirect'] = options[:session]
       end
 
-      get "/", {}, env
+      args = {}
+      if options[:force]
+        args[:redirect] = 1
+      end
+
+      get "/", args, env
     end
 
     def should_redirect_to(host)
@@ -217,8 +222,18 @@ describe GeoRedirect do
     end
 
     describe "with forced redirect flag" do
-      it "does not redirect"
-      it "stores decision in session"
+      before :each do
+        mock_request_from "US", :force => true
+      end
+
+      it "rewrites the flag out" do
+        should_redirect_to :il
+        last_response.headers["Location"].should_not include("redirect=1")
+      end
+
+      it "stores decision in session" do
+        should_remember :il
+      end
     end
 
   end
