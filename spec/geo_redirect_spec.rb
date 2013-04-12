@@ -66,4 +66,37 @@ describe GeoRedirect do
       end
     end
   end
+
+  describe "redirect logic" do
+    before :each do
+      mock_app
+    end
+
+    describe "without session memory" do
+      describe "for a foreign source" do
+        it "redirects to destination"
+        it "stores decision in session"
+      end
+
+      describe "for a local source" do
+        it "does not redirect"
+        it "stores decision in session"
+      end
+
+      describe "for a unknown source" do
+        it "does not redirect"
+        it "stores decision in session"
+      end
+    end
+
+    describe "with session memory" do
+      it "respects decision in session"
+    end
+
+    describe "with forced redirect flag" do
+      it "does not redirect"
+      it "stores decision in session"
+    end
+
+  end
 end
