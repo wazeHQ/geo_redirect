@@ -188,7 +188,8 @@ describe GeoRedirect do
     end
 
     describe "with session memory" do
-      it "respects decision in session"
+      it "redirects to remembered destination"
+      it "leaves session as is"
     end
 
     describe "with forced redirect flag" do
