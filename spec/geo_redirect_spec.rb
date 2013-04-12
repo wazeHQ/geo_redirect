@@ -56,7 +56,6 @@ describe GeoRedirect do
       it "initiates a log file" do
         @app.instance_variable_get(:"@logfile").should eq(@logfile.path)
         @app.instance_variable_get(:"@logger").should be_kind_of Logger
-        puts @app.instance_variable_get(:"@logger")
       end
 
       it "prints to log file" do
