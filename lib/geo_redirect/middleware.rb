@@ -67,18 +67,7 @@ module GeoRedirect
     end
 
     def handle_geoip
-      # Fetch country code
-      begin
-        ip_address = @request.env['HTTP_X_FORWARDED_FOR'] || @request.env['REMOTE_ADDR']
-        ip_address = ip_address.split(',').first.strip # take only the first given ip
-        self.log "Handling GeoIP lookup: IP #{ip_address}"
-        res     = @db.country(ip_address)
-        code    = res[:country_code]
-        country = res[:country_code2] unless code.nil? || code.zero?
-      rescue
-        country = nil
-      end
-
+      country = country_from_request rescue nil
       self.log "GeoIP match: country code #{country}"
 
       unless country.nil?
@@ -172,7 +161,24 @@ module GeoRedirect
         puts "GeoRedirect middlware."
         raise e
       end
-
     end
+
+    def request_ip
+      ip_address = @request.env['HTTP_X_FORWARDED_FOR'] || @request.env['REMOTE_ADDR']
+      # take only the first given ip
+      ip_address.split(',').first.strip
+    end
+
+
+    def country_from_request
+      ip = request_ip
+      self.log "Handling GeoIP lookup: IP #{ip}"
+
+      res     = @db.country(ip)
+      code    = res[:country_code]
+
+      res[:country_code2] unless code.nil? || code.zero?
+    end
+
   end
 end
