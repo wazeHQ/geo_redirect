@@ -197,7 +197,7 @@ describe GeoRedirect do
           mock_request_from "SOMEWHERE OVER THE RAINBOW"
         end
 
-        it "does redirect to default" do
+        it "redirects to default" do
           should_redirect_to :default
         end
 
@@ -207,7 +207,7 @@ describe GeoRedirect do
       end
     end
 
-    describe "with session memory" do
+    describe "with valid session memory" do
       before :each do
         mock_request_from "US", :session => :default
       end
@@ -218,6 +218,25 @@ describe GeoRedirect do
 
       it "leaves session as is" do
         should_remember :default
+      end
+
+    end
+
+    describe "with invalid session memory" do
+      before :each do
+        mock_request_from "US", :session => "foo"
+      end
+
+      it "removes invalid session data" do
+        session['geo_redirect'].should_not eq("foo")
+      end
+
+      it "redirects to destination" do
+        should_redirect_to :us
+      end
+
+      it "stores decision in session" do
+        should_remember :us
       end
     end
 
