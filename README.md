@@ -1,4 +1,5 @@
 # Waze GeoRedirect
+[![Build Status](https://secure.travis-ci.org/wazeHQ/geo_redirect.png)](http://travis-ci.org/wazeHQ/geo_redirect) [![Code Climate](https://codeclimate.com/github/wazeHQ/geo_redirect.png)](https://codeclimate.com/github/wazeHQ/geo_redirect) [![Gem Version](https://badge.fury.io/rb/geo_redirect.png)](http://badge.fury.io/rb/geo_redirect)
 
 `GeoRedirect` is a Rack middleware that can be configured to
 redirect incoming clients to different hosts based on their
