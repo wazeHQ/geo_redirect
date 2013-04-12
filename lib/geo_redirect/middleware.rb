@@ -98,7 +98,7 @@ module GeoRedirect
         hostname = host.is_a?(Symbol) ? @config[host][:host] : host
         redirect = !hostname.nil?
         hostname_ends_with = %r{#{hostname.gsub(".", "\.")}$}
-        redirect &&= !!(@request.host =~ hostname_ends_with) unless same_host
+        redirect &&= (@request.host =~ hostname_ends_with).nil? unless same_host
       end
 
       if redirect
