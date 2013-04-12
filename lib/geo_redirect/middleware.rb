@@ -40,7 +40,7 @@ module GeoRedirect
       host = @request.session['geo_redirect']
       if host && @config[host].nil? # Invalid var, remove it
         self.log "Invalid session var, forgetting"
-        forget_host
+        forget_host(host)
         host = nil
       end
 
@@ -136,7 +136,7 @@ module GeoRedirect
       @request.session['geo_redirect'] = host
     end
 
-    def forget_host
+    def forget_host(host)
       self.log "Forgetting: #{host}"
       remember_host(nil)
     end
