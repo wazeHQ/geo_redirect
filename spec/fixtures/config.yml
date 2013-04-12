@@ -7,6 +7,6 @@
   :countries: ['IL']
 
 :world: &default
-  :host: 'biz-world.waze.com'
+  :host: 'biz.world.waze.com'
 
 :default: *default

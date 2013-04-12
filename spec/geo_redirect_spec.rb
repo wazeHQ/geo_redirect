@@ -5,12 +5,16 @@ require "tempfile"
 describe GeoRedirect do
   include GeoRedirect::Support
 
+  before :each do
+    @config = YAML.load_file(fixture_path("config.yml"))
+  end
+
   describe "#load_config" do
     it "reads a config file" do
       mock_app
 
       @app.config.should_not be_nil
-      @app.config.should eq YAML.load_file(fixture_path("config.yml"))
+      @app.config.should eq(@config)
     end
 
     it "raises on not-found config file" do
@@ -73,6 +77,37 @@ describe GeoRedirect do
       expect {
         mock_app :logfile => '/no_such_file'
       }.to raise_error
+    end
+  end
+
+  describe "#host_by_country" do
+    before :each do
+      mock_app
+    end
+
+    it "fetches host by country" do
+      @app.host_by_country("US").should eq(:us)
+      @app.host_by_country("IL").should eq(:il)
+    end
+
+    it "falls back to default" do
+      @app.host_by_country(:foo).should eq(:default)
+    end
+  end
+
+  describe "host_by_hostname" do
+    before :each do
+      mock_app
+    end
+
+    it "fetches host by hostname" do
+      @app.host_by_hostname("biz.waze.com").should eq(:us)
+      @app.host_by_hostname("biz.waze.co.il").should eq(:il)
+      @app.host_by_hostname("biz.world.waze.com").should eq(:world)
+    end
+
+    it "falls back to default" do
+      @app.host_by_hostname("foo").should eq(:default)
     end
   end
 
