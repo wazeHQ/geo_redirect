@@ -132,7 +132,8 @@ describe GeoRedirect do
           country = GeoIP::Country.stub(:country_code2 => "US", :country_code => 225)
           @app.db.should_receive(:country).with(ip).and_return(country)
 
-          get "/", {}, "REMOTE_ADDR" => ip
+          get "/", {},
+            { "REMOTE_ADDR" => ip, "HTTP_HOST" => "biz.waze.co.il" }
         end
 
         it "redirects to destination" do
@@ -148,8 +149,23 @@ describe GeoRedirect do
       end
 
       describe "for a local source" do
-        it "does not redirect"
-        it "stores decision in session"
+        before :each do
+          ip = "5.5.5.5"
+          country = GeoIP::Country.stub(:country_code2 => "IL", :country_code => 102)
+          @app.db.should_receive(:country).with(ip).and_return(country)
+
+          get "/", {},
+            { "REMOTE_ADDR" => ip, "HTTP_HOST" => "biz.waze.co.il" }
+        end
+
+        it "does not redirect" do
+          last_response.body.should include("Hello world!")
+          last_response.should be_ok
+        end
+
+        it "stores decision in session" do
+          session['geo_redirect'].should eq(:il)
+        end
       end
 
       describe "for a unknown source" do
