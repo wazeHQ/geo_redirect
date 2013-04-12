@@ -1,4 +1,6 @@
 require "spec_helper"
+require "logger"
+require "tempfile"
 
 describe GeoRedirect do
   include GeoRedirect::Support

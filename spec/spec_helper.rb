@@ -1,6 +1,4 @@
 require "rack"
-require "logger"
-require "tempfile"
 require_relative "../lib/geo_redirect.rb"
 
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
