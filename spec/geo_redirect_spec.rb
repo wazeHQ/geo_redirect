@@ -125,14 +125,20 @@ describe GeoRedirect do
       mock_app
     end
 
-    def mock_request_from(country)
+    def mock_request_from(country, options={})
       ip = "5.5.5.5"
       country = GeoIP::Country.stub({ :country_code2 => country,
                                       :country_code => 5 })
       @app.db.stub(:country).with(ip).and_return(country)
 
-      get "/", {},
-        { "REMOTE_ADDR" => ip, "HTTP_HOST" => "biz.waze.co.il" }
+      env = { "REMOTE_ADDR" => ip, "HTTP_HOST" => "biz.waze.co.il" }
+
+      if options[:session]
+        env['rack.session'] ||= {}
+        env['rack.session']['geo_redirect'] = options[:session]
+      end
+
+      get "/", {}, env
     end
 
     def should_redirect_to(host)
@@ -197,8 +203,17 @@ describe GeoRedirect do
     end
 
     describe "with session memory" do
-      it "redirects to remembered destination"
-      it "leaves session as is"
+      before :each do
+        mock_request_from "US", :session => :default
+      end
+
+      it "redirects to remembered destination" do
+        should_redirect_to :default
+      end
+
+      it "leaves session as is" do
+        should_remember :default
+      end
     end
 
     describe "with forced redirect flag" do
