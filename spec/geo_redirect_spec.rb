@@ -125,15 +125,20 @@ describe GeoRedirect do
       mock_app
     end
 
+    def mock_request_from(country)
+      ip = "5.5.5.5"
+      country = GeoIP::Country.stub({ :country_code2 => country,
+                                      :country_code => 5 })
+      @app.db.should_receive(:country).with(ip).and_return(country)
+
+      get "/", {},
+        { "REMOTE_ADDR" => ip, "HTTP_HOST" => "biz.waze.co.il" }
+    end
+
     describe "without session memory" do
       describe "for a foreign source" do
         before :each do
-          ip = "5.5.5.5"
-          country = GeoIP::Country.stub(:country_code2 => "US", :country_code => 225)
-          @app.db.should_receive(:country).with(ip).and_return(country)
-
-          get "/", {},
-            { "REMOTE_ADDR" => ip, "HTTP_HOST" => "biz.waze.co.il" }
+          mock_request_from "US"
         end
 
         it "redirects to destination" do
@@ -150,12 +155,7 @@ describe GeoRedirect do
 
       describe "for a local source" do
         before :each do
-          ip = "5.5.5.5"
-          country = GeoIP::Country.stub(:country_code2 => "IL", :country_code => 102)
-          @app.db.should_receive(:country).with(ip).and_return(country)
-
-          get "/", {},
-            { "REMOTE_ADDR" => ip, "HTTP_HOST" => "biz.waze.co.il" }
+          mock_request_from "IL"
         end
 
         it "does not redirect" do
