@@ -70,7 +70,7 @@ module GeoRedirect
       # Fetch country code
       begin
         ip_address = @request.env['HTTP_X_FORWARDED_FOR'] || @request.env['REMOTE_ADDR']
-        ip_address = ip_address.split(',').first.chop # take only the first given ip
+        ip_address = ip_address.split(',').first.strip # take only the first given ip
         self.log "Handling GeoIP lookup: IP #{ip_address}"
         res     = @db.country(ip_address)
         code    = res.try(:country_code)
