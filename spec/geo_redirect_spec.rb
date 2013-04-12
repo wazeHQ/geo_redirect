@@ -181,9 +181,18 @@ describe GeoRedirect do
         end
       end
 
-      describe "for a unknown source" do
-        it "does not redirect"
-        it "stores decision in session"
+      describe "for an unknown source" do
+        before :each do
+          mock_request_from "SOMEWHERE OVER THE RAINBOW"
+        end
+
+        it "does redirect to default" do
+          should_redirect_to :default
+        end
+
+        it "stores decision in session" do
+          should_remember :default
+        end
       end
     end
 
