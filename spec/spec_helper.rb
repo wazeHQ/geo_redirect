@@ -29,7 +29,7 @@ module GeoRedirect
                  :db => 'spec/fixtures/GeoIP.dat'}.merge(options)
 
       main_app = lambda { |env|
-        request = Rack::Request.new(env)
+        Rack::Request.new(env)
         headers = {'Content-Type' => "text/html"}
         headers['Set-Cookie'] = "id=1; path=/\ntoken=abc; path=/; secure; HttpOnly"
         [200, headers, ['Hello world!']]
