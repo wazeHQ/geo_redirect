@@ -129,7 +129,7 @@ describe GeoRedirect do
       ip = "5.5.5.5"
       country = GeoIP::Country.stub({ :country_code2 => country,
                                       :country_code => 5 })
-      @app.db.should_receive(:country).with(ip).and_return(country)
+      @app.db.stub(:country).with(ip).and_return(country)
 
       get "/", {},
         { "REMOTE_ADDR" => ip, "HTTP_HOST" => "biz.waze.co.il" }
