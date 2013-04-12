@@ -125,10 +125,15 @@ describe GeoRedirect do
       mock_app
     end
 
-    def mock_request_from(country, options={})
+    def mock_request_from(code, options={})
       ip = "5.5.5.5"
-      country = GeoIP::Country.stub({ :country_code2 => country,
-                                      :country_code => 5 })
+
+      if code.nil?
+        country = nil
+      else
+        country = GeoIP::Country.stub({ :country_code2 => code,
+                                        :country_code => 5 })
+      end
       @app.db.stub(:country).with(ip).and_return(country)
 
       env = { "REMOTE_ADDR" => ip, "HTTP_HOST" => "biz.waze.co.il" }
@@ -252,6 +257,20 @@ describe GeoRedirect do
 
       it "stores decision in session" do
         should_remember :il
+      end
+    end
+
+    describe "with no recognizable IP" do
+      before :each do
+        mock_request_from nil
+      end
+
+      it "does not redirect" do
+        should_not_redirect
+      end
+
+      it "does not store session" do
+        should_remember nil
       end
     end
 
