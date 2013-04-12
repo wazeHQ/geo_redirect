@@ -12,6 +12,7 @@ Gem::Specification.new do |gem|
   gem.summary       = %q{Rack middleware to redirect clients to hostnames based on geo-location}
   gem.homepage      = ""
 
+  gem.add_dependency "rake"
   gem.add_dependency "geoip"
 
   gem.add_development_dependency "rack",  "~> 1.5.2"
