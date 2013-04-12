@@ -1,6 +1,4 @@
 module GeoRedirect
-  include Rack::Test::Methods
-
   module Support
     def fixture_path(file)
       "spec/fixtures/#{file}"
@@ -30,10 +28,6 @@ module GeoRedirect
       builder.use GeoRedirect::Middleware, options
       builder.run main_app
       @app = builder.to_app
-    end
-
-    def session
-      last_request.env['rack.session']
     end
   end
 end

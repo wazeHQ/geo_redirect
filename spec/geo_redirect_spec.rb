@@ -4,6 +4,15 @@ require "tempfile"
 
 describe GeoRedirect do
   include GeoRedirect::Support
+  include Rack::Test::Methods
+
+  def session
+    last_request.env['rack.session']
+  end
+
+  def url_scheme
+    last_request.env['rack.url_scheme']
+  end
 
   before :each do
     @config = YAML.load_file(fixture_path("config.yml"))
