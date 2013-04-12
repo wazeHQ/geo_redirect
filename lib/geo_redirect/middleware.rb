@@ -73,8 +73,8 @@ module GeoRedirect
         ip_address = ip_address.split(',').first.strip # take only the first given ip
         self.log "Handling GeoIP lookup: IP #{ip_address}"
         res     = @db.country(ip_address)
-        code    = res.try(:country_code)
-        country = res.try(:country_code2) unless code.nil? || code.zero?
+        code    = res[:country_code]
+        country = res[:country_code2] unless code.nil? || code.zero?
       rescue
         country = nil
       end
