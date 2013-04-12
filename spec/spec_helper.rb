@@ -1,7 +1,9 @@
 require "rspec"
 require "rack"
 
-require_relative "../lib/geo_redirect.rb"
+$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
+$LOAD_PATH.unshift(File.dirname(__FILE__))
+require "geo_redirect"
 require "support"
 
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
