@@ -127,8 +127,24 @@ describe GeoRedirect do
 
     describe "without session memory" do
       describe "for a foreign source" do
-        it "redirects to destination"
-        it "stores decision in session"
+        before :each do
+          ip = "5.5.5.5"
+          country = GeoIP::Country.stub(:country_code2 => "US", :country_code => 225)
+          @app.db.should_receive(:country).with(ip).and_return(country)
+
+          get "/", {}, "REMOTE_ADDR" => ip
+        end
+
+        it "redirects to destination" do
+          last_response.body.should include("Moved Permanently")
+          last_response.status.should eq(301)
+          last_response.headers.should have_key("Location")
+          last_response.headers["Location"].should start_with("#{url_scheme}://#{@config[:us][:host]}")
+        end
+
+        it "stores decision in session" do
+          session['geo_redirect'].should eq(:us)
+        end
       end
 
       describe "for a local source" do
