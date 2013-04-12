@@ -13,7 +13,7 @@ describe GeoRedirect do
 
     it "raises on not-found config file" do
       expect {
-        mock_app :config => "/no_such_file"
+        mock_app :config => nonexisting_file_path
       }.to raise_error
     end
 
@@ -34,7 +34,7 @@ describe GeoRedirect do
 
     it "raises on not-found db file" do
       expect {
-        mock_app :db => "/no_such_file"
+        mock_app :db => nonexisting_file_path
       }.to raise_error
     end
 

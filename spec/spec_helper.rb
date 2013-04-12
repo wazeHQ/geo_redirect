@@ -18,6 +18,10 @@ module GeoRedirect
       "spec/fixtures/#{file}"
     end
 
+    def nonexisting_file_path
+      "/no_such_file"
+    end
+
     def app; Rack::Lint.new(@app); end
 
     def mock_app(options = {})
