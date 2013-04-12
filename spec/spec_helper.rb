@@ -27,10 +27,10 @@ module GeoRedirect
                   :db => fixture_path("GeoIP.dat")
                 }.merge(options)
 
+      # Simple HTTP server that always returns 'Hello world!'
       main_app = lambda { |env|
         Rack::Request.new(env)
         headers = {"Content-Type" => "text/html"}
-        headers["Set-Cookie"] = "id=1; path=/\ntoken=abc; path=/; secure; HttpOnly"
         [200, headers, ["Hello world!"]]
       }
 
