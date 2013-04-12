@@ -82,24 +82,10 @@ module GeoRedirect
     end
 
     def redirect_request(host=nil, same_host=false)
-      redirect = true
-      unless host.nil?
-        hostname = host.is_a?(Symbol) ? @config[host][:host] : host
-        redirect = !hostname.nil?
-        hostname_ends_with = %r{#{hostname.gsub(".", "\.")}$}
-        redirect &&= (@request.host =~ hostname_ends_with).nil? unless same_host
-      end
+      hostname = hostname_by_host(host)
 
-      if redirect
-        url = URI.parse(@request.url)
-        url.port = nil
-        url.host = hostname if host
-        # Remove 'redirect' GET arg
-        query_hash = Rack::Utils.parse_query(url.query).tap{ |u|
-          u.delete('redirect')
-        }
-        url.query = URI.encode_www_form(query_hash)
-        url.query = nil if url.query.empty?
+      if should_redirect?(hostname, same_host)
+        url = redirect_url(hostname)
 
         self.log "Redirecting to #{url}"
         [301,
@@ -118,6 +104,10 @@ module GeoRedirect
     def host_by_hostname(hostname)
       hosts = @config.select { |k, v| v[:host] == hostname }
       hosts.keys.first || :default
+    end
+
+    def hostname_by_host(host)
+      host.is_a?(Symbol) ? @config[host][:host] : host
     end
 
     def remember_host(host)
@@ -178,6 +168,32 @@ module GeoRedirect
       code    = res[:country_code]
 
       res[:country_code2] unless code.nil? || code.zero?
+    end
+
+    def redirect_url(hostname)
+      url = URI.parse(@request.url)
+      url.port = nil
+      url.host = hostname if hostname
+
+      # Remove force flag from GET arguments
+      query_hash = Rack::Utils.parse_query(url.query).tap{ |u|
+        u.delete('redirect')
+      }
+
+      # Copy query
+      url.query = URI.encode_www_form(query_hash)
+      url.query = nil if url.query.empty?
+
+      url
+    end
+
+    def should_redirect?(hostname, same_host)
+      unless hostname.nil? || same_host
+        hostname_ends_with = %r{#{hostname.gsub(".", "\.")}$}
+        (@request.host =~ hostname_ends_with).nil?
+      else
+        true
+      end
     end
 
   end
