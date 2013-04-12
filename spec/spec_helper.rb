@@ -4,6 +4,8 @@
 # loaded once.
 
 require 'rack'
+require 'logger'
+require 'tempfile'
 require_relative "../lib/geo_redirect.rb"
 
 #

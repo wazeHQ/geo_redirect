@@ -50,4 +50,25 @@ describe GeoRedirect do
       }.to raise_error
     end
   end
+
+  describe "#log" do
+    before :each do
+      @logfile = Tempfile.new("log")
+      mock_app :logfile => @logfile.path
+    end
+
+    it "initiates a log file" do
+      @app.instance_variable_get(:"@logfile").should eq(@logfile.path)
+      @app.instance_variable_get(:"@logger").should be_kind_of Logger
+      puts @app.instance_variable_get(:"@logger")
+    end
+
+    it "prints to log file" do
+      message = "Testing GeoRedirect logger"
+      @app.send(:log, [message])
+      @logfile.open do
+        @logfile.read.should include(message)
+      end
+    end
+  end
 end
