@@ -12,12 +12,12 @@ module GeoRedirect
       # Some defaults
       options[:db]     ||= DEFAULT_DB_PATH
       options[:config] ||= DEFAULT_CONFIG_PATH
-      @logfile = options[:logfile] || nil
 
       @app = app
 
       @db     = load_db(options[:db])
       @config = load_config(options[:config])
+      @logger = init_logger(options[:logfile]) if options[:logfile]
 
       self.log "Initialized middleware"
     end
@@ -122,10 +122,13 @@ module GeoRedirect
 
     protected
     def log(message, level=:debug)
-      unless @logfile.nil?
-        @logger ||= Logger.new(@logfile)
-        @logger.send(level, "[GeoRedirect] #{message}")
-      end
+      @logger.send(level, "[GeoRedirect] #{message}") unless @logger.nil?
+    end
+
+    def init_logger(path)
+      Logger.new(path)
+    rescue Errno::EINVAL, Errno::EACCES
+      self.log("Could not access provided log file path.", :error)
     end
 
     def load_db(path)
