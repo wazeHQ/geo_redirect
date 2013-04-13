@@ -121,10 +121,10 @@ module GeoRedirect
     end
 
     protected
-    def log(message)
+    def log(message, level=:debug)
       unless @logfile.nil?
         @logger ||= Logger.new(@logfile)
-        @logger.debug("[GeoRedirect] #{message}")
+        @logger.send(level, "[GeoRedirect] #{message}")
       end
     end
 
