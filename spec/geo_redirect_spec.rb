@@ -64,8 +64,7 @@ describe GeoRedirect do
   describe "#log" do
     describe "with valid logfile path" do
       before :each do
-        @logfile = Tempfile.new("log")
-        mock_app :logfile => @logfile.path
+        mock_app
       end
 
       it "initiates a log file" do
@@ -76,9 +75,7 @@ describe GeoRedirect do
       it "prints to log file" do
         message = "Testing GeoRedirect logger"
         @app.send(:log, [message])
-        @logfile.open do
-          @logfile.read.should include(message)
-        end
+        log_should_include(message)
       end
     end
 

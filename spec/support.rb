@@ -13,10 +13,6 @@ module GeoRedirect
     end
 
     def mock_app(options = {})
-      options = { :config => fixture_path("config.yml"),
-                  :db => fixture_path("GeoIP.dat")
-                }.merge(options)
-
       # Simple HTTP server that always returns 'Hello world!'
       main_app = lambda { |env|
         Rack::Request.new(env)
@@ -24,10 +20,22 @@ module GeoRedirect
         [200, headers, ["Hello world!"]]
       }
 
+      @logfile = Tempfile.new("log")
+      options = { :config => fixture_path("config.yml"),
+                  :db => fixture_path("GeoIP.dat"),
+                  :logfile => @logfile.path
+                }.merge(options)
+
       builder = Rack::Builder.new
       builder.use GeoRedirect::Middleware, options
       builder.run main_app
       @app = builder.to_app
+    end
+
+    def log_should_include(message)
+      @logfile.open do
+        @logfile.read.should include(message)
+      end
     end
   end
 end
