@@ -15,9 +15,9 @@ module GeoRedirect
 
       @app = app
 
+      @logger = init_logger(options[:logfile]) if options[:logfile]
       @db     = load_db(options[:db])
       @config = load_config(options[:config])
-      @logger = init_logger(options[:logfile]) if options[:logfile]
 
       self.log "Initialized middleware"
     end
