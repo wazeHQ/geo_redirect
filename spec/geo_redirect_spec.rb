@@ -53,12 +53,16 @@ describe GeoRedirect do
       log_should_include("Could not load GeoIP database file.")
     end
 
+    # this example is disabled, as it seems that
+    # GeoIP does not let me know if a db file is proper.
+=begin
     it "errors on mal-formatted db file" do
       pending "GeoIP does not raise on bad files"
       mock_app :db => fixture_path("config.yml")
       log_should_include("ERROR")
       log_should_include("Could not load GeoIP database file.")
     end
+=end
   end
 
   describe "#log" do
