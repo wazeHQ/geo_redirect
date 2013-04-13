@@ -26,16 +26,16 @@ describe GeoRedirect do
       @app.config.should eq(@config)
     end
 
-    it "raises on not-found config file" do
-      expect {
-        mock_app :config => nonexisting_file_path
-      }.to raise_error
+    it "errors on not-found config file" do
+      mock_app :config => nonexisting_file_path
+      log_should_include("ERROR")
+      log_should_include("Could not load GeoRedirect config YML file")
     end
 
-    it "raises on a mal-formatted config file" do
-      expect {
-        mock_app :config => fixture_path("config.bad.yml")
-      }.to raise_error
+    it "errors on a mal-formatted config file" do
+      mock_app :config => fixture_path("config.bad.yml")
+      log_should_include("ERROR")
+      log_should_include("Could not load GeoRedirect config YML file")
     end
   end
 
@@ -47,17 +47,17 @@ describe GeoRedirect do
       @app.db.should be_a_kind_of GeoIP
     end
 
-    it "raises on not-found db file" do
-      expect {
-        mock_app :db => nonexisting_file_path
-      }.to raise_error
+    it "errors on not-found db file" do
+      mock_app :db => nonexisting_file_path
+      log_should_include("ERROR")
+      log_should_include("Could not load GeoIP database file.")
     end
 
-    it "raises on mal-formatted db file" do
+    it "errors on mal-formatted db file" do
       pending "GeoIP does not raise on bad files"
-      expect {
-        mock_app :db => fixture_path("config.yml")
-      }.to raise_error
+      mock_app :db => fixture_path("config.yml")
+      log_should_include("ERROR")
+      log_should_include("Could not load GeoIP database file.")
     end
   end
 
