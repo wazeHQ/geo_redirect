@@ -16,8 +16,8 @@ module GeoRedirect
       @app = app
 
       @logger = init_logger(options[:logfile]) if options[:logfile]
-      @db     = load_db(options[:db])
-      @config = load_config(options[:config])
+      @db     = init_db(options[:db])
+      @config = init_config(options[:config])
 
       self.log "Initialized middleware"
     end
@@ -131,7 +131,7 @@ module GeoRedirect
       nil
     end
 
-    def load_db(path)
+    def init_db(path)
       GeoIP.new(path)
     rescue Errno::EINVAL, Errno::ENOENT
       message = <<-ERROR
@@ -142,7 +142,7 @@ module GeoRedirect
       self.log(message, :error)
     end
 
-    def load_config(path)
+    def init_config(path)
       YAML.load_file(path) || raise(Errno::EINVAL)
     rescue Errno::EINVAL, Errno::ENOENT, SyntaxError
       message = <<-ERROR
