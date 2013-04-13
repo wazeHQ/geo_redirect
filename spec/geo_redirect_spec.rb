@@ -78,10 +78,9 @@ describe GeoRedirect do
       end
     end
 
-    it "raises on invalid logfile path" do
-      expect {
-        mock_app :logfile => '/no_such_file'
-      }.to raise_error
+    it "ignores invalid logfile path" do
+      mock_app :logfile => '/no_such_file'
+      @app.instance_variable_get(:"@logger").should be_nil
     end
   end
 

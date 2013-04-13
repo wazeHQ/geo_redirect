@@ -128,7 +128,7 @@ module GeoRedirect
     def init_logger(path)
       Logger.new(path)
     rescue Errno::EINVAL, Errno::EACCES
-      self.log("Could not access provided log file path.", :error)
+      nil
     end
 
     def load_db(path)
