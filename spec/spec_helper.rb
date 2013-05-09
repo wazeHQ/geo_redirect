@@ -5,10 +5,12 @@ require "rspec"
 require "rack"
 require "rack/test"
 
-$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
-$LOAD_PATH.unshift(File.dirname(__FILE__))
+current_dir = File.dirname(__FILE__)
+$LOAD_PATH.unshift(File.join(current_dir, '..', 'lib'))
+$LOAD_PATH.unshift(current_dir)
 require "geo_redirect"
-require "support"
+
+Dir[File.join(current_dir, "support/**/*.rb")].each { |f| require f }
 
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 RSpec.configure do |config|
