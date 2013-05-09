@@ -1,7 +1,8 @@
-require 'zlib'
+require 'geo_redirect'
 require 'open-uri'
+require 'zlib'
 
-namespace :georedirect do
+namespace :geo_redirect do
   DB_URI = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz'
 
   desc "Fetches an updated copy of the GeoIP countries DB from MaxMind"
