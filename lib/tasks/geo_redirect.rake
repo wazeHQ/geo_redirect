@@ -16,7 +16,6 @@ namespace :geo_redirect do
     result = gz.read
 
     # Write to file
-    filename = Rails.root.join(args[:db_path])
-    File.open(filename, 'w') { |f| f.write(result) }
+    File.open(args[:db_path], 'w') { |f| f.write(result) }
   end
 end
