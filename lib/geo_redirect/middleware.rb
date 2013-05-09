@@ -2,9 +2,6 @@ require 'yaml'
 require 'geoip'
 
 module GeoRedirect
-  DEFAULT_DB_PATH     = 'db/GeoIP.dat'
-  DEFAULT_CONFIG_PATH = 'config/geo_redirect.yml'
-
   class Middleware
     attr_accessor :db, :config
 
