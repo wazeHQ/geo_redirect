@@ -1,8 +1,8 @@
 require "spec_helper"
-require "logger"
 require "tempfile"
+require "logger"
 
-describe GeoRedirect do
+describe "geo_redirect" do
   include GeoRedirect::Support
   include Rack::Test::Methods
 
@@ -273,5 +273,16 @@ describe GeoRedirect do
       end
     end
 
+  end
+end
+
+describe "geo_redirect:fetch_db" do
+  include_context "rake"
+
+  it "downloads a GeoIP db to a location" do
+    @dbfile = Tempfile.new("db")
+    subject.invoke(@dbfile.path)
+    @dbfile.size.should_not be_nil
+    @dbfile.size.should be > 0
   end
 end
