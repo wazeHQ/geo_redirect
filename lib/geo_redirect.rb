@@ -4,6 +4,8 @@ require 'geo_redirect/version'
 module GeoRedirect
 
   # Load rake tasks
-  require 'geo_redirect/railtie' if defined?(Rails)
+  if defined? Rails
+    require 'geo_redirect/railtie'
+  end
 
 end
