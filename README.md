@@ -72,7 +72,7 @@ Note that:
 
 You can download the database file [directly from MaxMind](http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz) and unzip it into `db/` in your project, **or** you could use the following `rake` task designed just for that:
 
-	$ rake georedirect:fetch_db
+	$ rake geo_redirect:fetch_db
 
 It'd be a good idea to use this task on your (Capistrano or whatever) deployment scripts.
 
