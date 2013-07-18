@@ -140,6 +140,7 @@ describe "geo_redirect" do
       if options[:session]
         env['rack.session'] ||= {}
         env['rack.session']['geo_redirect'] = options[:session]
+        env['rack.session']['geo_redirect.country'] = code
       end
 
       args = {}
@@ -167,6 +168,10 @@ describe "geo_redirect" do
       session['geo_redirect'].should eq(host)
     end
 
+    def should_remember_country(country)
+      session['geo_redirect.country'].should eq(country)
+    end
+
     describe "without session memory" do
       describe "for a foreign source" do
         before :each do
@@ -179,6 +184,10 @@ describe "geo_redirect" do
 
         it "stores decision in session" do
           should_remember :us
+        end
+
+        it "stores discovered country in session" do
+          should_remember_country "US"
         end
       end
 
@@ -194,6 +203,10 @@ describe "geo_redirect" do
         it "stores decision in session" do
           should_remember :il
         end
+
+        it "stores discovered country in session" do
+          should_remember_country "IL"
+        end
       end
 
       describe "for an unknown source" do
@@ -207,6 +220,10 @@ describe "geo_redirect" do
 
         it "stores decision in session" do
           should_remember :default
+        end
+
+        it "stores discovered country in session" do
+          should_remember_country "SOMEWHERE OVER THE RAINBOW"
         end
       end
     end
@@ -224,6 +241,9 @@ describe "geo_redirect" do
         should_remember :default
       end
 
+      it "remembers discovered country" do
+        should_remember_country "US"
+      end
     end
 
     describe "with invalid session memory" do
@@ -242,6 +262,10 @@ describe "geo_redirect" do
       it "stores decision in session" do
         should_remember :us
       end
+
+      it "stores discovered country in session" do
+        should_remember_country "US"
+      end
     end
 
     describe "with forced redirect flag" do
@@ -257,6 +281,10 @@ describe "geo_redirect" do
       it "stores decision in session" do
         should_remember :il
       end
+
+      it "does not store discovered country in session" do
+        should_remember_country nil
+      end
     end
 
     describe "with no recognizable IP" do
@@ -270,6 +298,10 @@ describe "geo_redirect" do
 
       it "does not store session" do
         should_remember nil
+      end
+
+      it "does not store discovered country in session" do
+        should_remember_country nil
       end
     end
 
