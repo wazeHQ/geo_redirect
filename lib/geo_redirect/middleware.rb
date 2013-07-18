@@ -142,7 +142,7 @@ module GeoRedirect
 
     def init_config(path)
       YAML.load_file(path) || raise(Errno::EINVAL)
-    rescue Errno::EINVAL, Errno::ENOENT, SyntaxError
+    rescue Errno::EINVAL, Errno::ENOENT, Psych::SyntaxError, SyntaxError
       message = <<-ERROR
         Could not load GeoRedirect config YML file.
         Please make sure you have a valid YML file and pass its name when adding the GeoRedirect middlware.
