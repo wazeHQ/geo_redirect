@@ -99,6 +99,11 @@ This is useful when working on your configuration YAML.
 
 `GeoRedirect`'s log messages will always be prefixed with `[GeoRedirect]`.
 
+### Accessing discovered country
+
+The country code discovered for the current user is available for your convenience, under `session['geo_redirect.country']`.  
+You can use it to make content decisions, or whatever.
+
 ## Known Issues
 
 A couple issues I know about but haven't had the time to fix:
