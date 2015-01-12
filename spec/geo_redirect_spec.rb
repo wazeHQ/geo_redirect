@@ -14,16 +14,12 @@ describe 'geo_redirect' do
     last_request.env['rack.url_scheme']
   end
 
-  before :each do
-    @config = YAML.load_file(fixture_path('config.yml'))
-  end
+  let(:config) { YAML.load_file(fixture_path('config.yml')) }
 
   describe '#load_config' do
     it 'reads a config file' do
       mock_app
-
-      @app.config.should_not be_nil
-      @app.config.should eq(@config)
+      expect(@app.config).to eq(config)
     end
 
     it 'errors on not-found config file' do
@@ -42,9 +38,7 @@ describe 'geo_redirect' do
   describe '#load_db' do
     it 'reads a db file' do
       mock_app
-
-      @app.db.should_not be_nil
-      @app.db.should be_a_kind_of GeoIP
+      expect(@app.db).to be_a(GeoIP)
     end
 
     it 'errors on not-found db file' do
@@ -65,9 +59,7 @@ describe 'geo_redirect' do
 
   describe '#log' do
     describe 'with valid logfile path' do
-      before :each do
-        mock_app
-      end
+      before { mock_app }
 
       it 'initiates a log file' do
         @app.instance_variable_get(:"@logger").should be_kind_of Logger
@@ -82,38 +74,37 @@ describe 'geo_redirect' do
 
     it 'ignores invalid logfile path' do
       mock_app logfile: '/no_such_file'
-      @app.instance_variable_get(:"@logger").should be_nil
+      expect(@app.instance_variable_get(:"@logger")).to be_nil
     end
   end
 
   describe '#host_by_country' do
-    before :each do
-      mock_app
+    before { mock_app }
+    subject { @app.host_by_country(country) }
+
+    context 'when country is valid' do
+      let(:country) { 'US' }
+      it { is_expected.to eq(:us) }
     end
 
-    it 'fetches host by country' do
-      @app.host_by_country('US').should eq(:us)
-      @app.host_by_country('IL').should eq(:il)
-    end
-
-    it 'falls back to default' do
-      @app.host_by_country(:foo).should eq(:default)
+    context 'when country is invalid' do
+      let(:country) { 'WHATEVER' }
+      it { is_expected.to eq(:default) }
     end
   end
 
   describe 'host_by_hostname' do
-    before :each do
-      mock_app
+    before { mock_app }
+    subject { @app.host_by_hostname(hostname) }
+
+    context 'when hostname is valid' do
+      let(:hostname) { 'biz.waze.co.il' }
+      it { is_expected.to eq(:il) }
     end
 
-    it 'fetches host by hostname' do
-      @app.host_by_hostname('biz.waze.com').should eq(:us)
-      @app.host_by_hostname('biz.waze.co.il').should eq(:il)
-      @app.host_by_hostname('biz.world.waze.com').should eq(:world)
-    end
-
-    it 'falls back to default' do
-      @app.host_by_hostname('foo').should eq(:default)
+    context 'when hostname is invalid' do
+      let(:hostname) { 'something.else.org' }
+      it { is_expected.to eq(:default) }
     end
   end
 
@@ -152,7 +143,7 @@ describe 'geo_redirect' do
       last_response.body.should include('Moved Permanently')
       last_response.status.should eq(301)
       last_response.headers.should have_key('Location')
-      url = "#{url_scheme}://#{@config[host][:host]}"
+      url = "#{url_scheme}://#{config[host][:host]}"
       last_response.headers['Location'].should start_with(url)
     end
 
@@ -171,153 +162,70 @@ describe 'geo_redirect' do
 
     describe 'without session memory' do
       describe 'for a foreign source' do
-        before :each do
-          mock_request_from 'US'
-        end
-
-        it 'redirects to destination' do
-          should_redirect_to :us
-        end
-
-        it 'stores decision in session' do
-          should_remember :us
-        end
-
-        it 'stores discovered country in session' do
-          should_remember_country 'US'
-        end
+        before { mock_request_from 'US' }
+        it { should_redirect_to :us }
+        it { should_remember :us }
+        it { should_remember_country 'US' }
       end
 
       describe 'for a local source' do
-        before :each do
-          mock_request_from 'IL'
-        end
-
-        it 'does not redirect' do
-          should_not_redirect
-        end
-
-        it 'stores decision in session' do
-          should_remember :il
-        end
-
-        it 'stores discovered country in session' do
-          should_remember_country 'IL'
-        end
+        before { mock_request_from 'IL' }
+        it { should_not_redirect }
+        it { should_remember :il }
+        it { should_remember_country 'IL' }
       end
 
       describe 'for an unknown source' do
-        before :each do
-          mock_request_from 'SOMEWHERE OVER THE RAINBOW'
-        end
-
-        it 'redirects to default' do
-          should_redirect_to :default
-        end
-
-        it 'stores decision in session' do
-          should_remember :default
-        end
-
-        it 'stores discovered country in session' do
-          should_remember_country 'SOMEWHERE OVER THE RAINBOW'
-        end
+        before { mock_request_from 'SOMEWHERE OVER THE RAINBOW' }
+        it { should_redirect_to :default }
+        it { should_remember :default }
+        it { should_remember_country 'SOMEWHERE OVER THE RAINBOW' }
       end
     end
 
     describe 'with valid session memory' do
-      before :each do
-        mock_request_from 'US', session: :default
-      end
-
-      it 'redirects to remembered destination' do
-        should_redirect_to :default
-      end
-
-      it 'leaves session as is' do
-        should_remember :default
-      end
-
-      it 'remembers discovered country' do
-        should_remember_country 'US'
-      end
+      before { mock_request_from 'US', session: :default }
+      it { should_redirect_to :default }
+      it { should_remember :default }
+      it { should_remember_country 'US' }
     end
 
     describe 'with invalid session memory' do
-      before :each do
-        mock_request_from 'US', session: 'foo'
-      end
+      before { mock_request_from 'US', session: 'foo' }
 
       it 'removes invalid session data' do
-        session['geo_redirect'].should_not eq('foo')
+        expect(session['geo_redirect']).not_to eq('foo')
       end
 
-      it 'redirects to destination' do
-        should_redirect_to :us
-      end
-
-      it 'stores decision in session' do
-        should_remember :us
-      end
-
-      it 'stores discovered country in session' do
-        should_remember_country 'US'
-      end
+      it { should_redirect_to :us }
+      it { should_remember :us }
+      it { should_remember_country 'US' }
     end
 
     describe 'with forced redirect flag' do
-      before :each do
-        mock_request_from 'US', force: true
-      end
+      before { mock_request_from 'US', force: true }
 
+      it { should_redirect_to :il }
       it 'rewrites the flag out' do
-        should_redirect_to :il
-        last_response.headers['Location'].should_not include('redirect=1')
+        expect(last_response.headers['Location']).not_to include('redirect=1')
       end
 
-      it 'stores decision in session' do
-        should_remember :il
-      end
-
-      it 'does not store discovered country in session' do
-        should_remember_country nil
-      end
+      it { should_remember :il }
+      it { should_remember_country nil }
     end
 
     describe 'with skip flag' do
-      before :each do
-        mock_request_from 'US', skip: true
-      end
-
-      it 'does not store decision in session' do
-        should_remember nil
-      end
-
-      it 'does not store discovered country in session' do
-        should_remember_country nil
-      end
-
-      it 'does not redirect' do
-        should_not_redirect
-      end
+      before { mock_request_from 'US', skip: true }
+      it { should_not_redirect }
+      it { should_remember nil }
+      it { should_remember_country nil }
     end
 
     describe 'with no recognizable IP' do
-      before :each do
-        mock_request_from nil
-      end
-
-      it 'does not redirect' do
-        should_not_redirect
-      end
-
-      it 'does not store session' do
-        should_remember nil
-      end
-
-      it 'does not store discovered country in session' do
-        should_remember_country nil
-      end
+      before { mock_request_from nil }
+      it { should_not_redirect }
+      it { should_remember nil }
+      it { should_remember_country nil }
     end
   end
 end
@@ -326,9 +234,8 @@ describe 'geo_redirect:fetch_db' do
   include_context 'rake'
 
   it 'downloads a GeoIP db to a location' do
-    @dbfile = Tempfile.new('db')
-    subject.invoke(@dbfile.path)
-    @dbfile.size.should_not be_nil
-    @dbfile.size.should be > 0
+    dbfile = Tempfile.new('db')
+    subject.invoke(dbfile.path)
+    expect(dbfile.size).to be > 0
   end
 end
