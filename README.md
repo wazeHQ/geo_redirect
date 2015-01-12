@@ -12,9 +12,15 @@ to redirect users to:
 * [biz.waze.com](http://biz.waze.com) for US and Canada incoming traffic.
 * [biz-world.waze.com](http://biz-world.waze.com/) for any other sources.
 
-The server stores a session variable with the server it decided on, for future traffic from the same client.
+The server stores a session variable with the server it decided on, for future
+traffic from the same client.
 
-In addition, you can override these redirects by adding `?redirect=1` to any URL, and by that forcing the server to host from the current domain (and saving that domain to the user's session variable).
+In addition, you can override these redirects by adding `?redirect=1` to any
+URL, and by that forcing the server to host from the current domain (and saving
+that domain to the user's session variable).
+
+To skip geo-redirection completely, pass a `?skip_geo=true` argument (this would
+avoid saving any session value and/or HTTP redirects).
 
 ## Installation
 
@@ -45,36 +51,44 @@ This should be a YML file representing your redirection rules.
 
 Here's a template that we use for the setup described above:
 
-```
-:us:
-  :host: 'biz.waze.com'
-  :countries: ['US', 'CA']
+    :us:
+      :host: 'biz.waze.com'
+      :countries: ['US', 'CA']
 
-:il:
-  :host: 'biz.waze.co.il'
-  :countries: ['IL']
+    :il:
+      :host: 'biz.waze.co.il'
+      :countries: ['IL']
 
-:world: &default
-  :host: 'biz-world.waze.com'
+    :world: &default
+      :host: 'biz-world.waze.com'
 
-:default: *default
-```
+    :default: *default
 
 Note that:
 
 1. Every main item is a location, and must have a `host` configured.
-2. A location can have a `countries` array. This will cause a redirect to this location for users from that country code. For available country codes, see [ISO 3166 Country Codes list](http://www.maxmind.com/en/iso3166) from MaxMind (the Geo IP provider `GeoRedirect` uses).
-3. There must be a `default` location that would be used in case the client can't be geo-located.
+2. A location can have a `countries` array. This will cause a redirect to this
+   location for users from that country code. For available country codes, see
+   [ISO 3166 Country Codes list](http://www.maxmind.com/en/iso3166) from MaxMind
+   (the Geo IP provider `GeoRedirect` uses).
+3. There must be a `default` location that would be used in case the client
+   can't be geo-located.
 
 ### 2. GeoIP Countries database
 
-`GeoRedirect` uses the [`geoip`](http://geoip.rubyforge.org/) gem for its geo-location functionality. In particular, it requires the `GeoLite country` free database from [MaxMind](http://www.maxmind.com/).
+`GeoRedirect` uses the [`geoip`](http://geoip.rubyforge.org/) gem for its
+geo-location functionality. In particular, it requires the `GeoLite country`
+free database from [MaxMind](http://www.maxmind.com/).
 
-You can download the database file [directly from MaxMind](http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz) and unzip it into `db/` in your project, **or** you could use the following `rake` task designed just for that:
+You can download the database file [directly from
+MaxMind](http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz)
+and unzip it into `db/` in your project, **or** you could use the following
+`rake` task designed just for that:
 
 	$ rake geo_redirect:fetch_db
 
-It'd be a good idea to use this task on your (Capistrano or whatever) deployment scripts.
+It'd be a good idea to use this task on your (Capistrano or whatever) deployment
+scripts.
 
 ### Custom paths
 
@@ -83,33 +97,41 @@ The default paths for these files are:
 1. `config/georedirect.yml`
 2. `db/GeoIP.dat`
 
-If that doesn't suit you, you can customize these when adding `GeoRedirect` to your project:
+If that doesn't suit you, you can customize these when adding `GeoRedirect` to
+your project:
 
 	  Rails.application.middleware.use GeoRedirect::Middleware, {
-	  	:db => 'db/geo_database.dat',
-	  	:config => 'geo_cfg.yml'
+	  	db: 'db/geo_database.dat',
+	  	config: 'geo_cfg.yml'
 	  }
 
 ### Debugging
 
-You can add a `logfile` path string when adding the middleware if you want it to log some of its decision process into the file.  
+You can add a `logfile` path string when adding the middleware if you want it to
+log some of its decision process into the file.  
 This is useful when working on your configuration YAML.
 
-	Rails.application.middleware.use GeoRedirect::Middleware, :logfile => 'log/geo_redirect.log'
+	Rails.application.middleware.use GeoRedirect::Middleware, logfile: 'log/geo_redirect.log'
 
 `GeoRedirect`'s log messages will always be prefixed with `[GeoRedirect]`.
 
 ### Accessing discovered country
 
-The country code discovered for the current user is available for your convenience, under `session['geo_redirect.country']`.  
+The country code discovered for the current user is available for your
+convenience, under `session['geo_redirect.country']`.  
 You can use it to make content decisions, or whatever.
 
 ## Known Issues
 
 A couple issues I know about but haven't had the time to fix:
 
-1. Cross-domain session var is required. In particular, if your stubborn user goes to more than 1 server with `?redirect=1`, all of these servers will never redirect them again (until the session is expired).
-2. When a client accesses your site from an unknown hostname (one that was not configured in the `yml` file) with `?redirect=1`, they will stay in that hostname for the current session, but in the future would be redirected to the configured default hostname (because it was saved on their session var).
+1. Cross-domain session var is required. In particular, if your stubborn user
+   goes to more than 1 server with `?redirect=1`, all of these servers will
+   never redirect them again (until the session is expired).
+2. When a client accesses your site from an unknown hostname (one that was not
+   configured in the `yml` file) with `?redirect=1`, they will stay in that
+   hostname for the current session, but in the future would be redirected to
+   the configured default hostname (because it was saved on their session var).
 
 
 ## Contributing
