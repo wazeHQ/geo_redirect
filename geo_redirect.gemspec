@@ -15,10 +15,10 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'rake'
   gem.add_dependency 'geoip'
 
-  gem.add_development_dependency 'rspec',     '~> 2.13.0'
-  gem.add_development_dependency 'rack',      '~> 1.5.2'
-  gem.add_development_dependency 'rack-test', '~> 0.6.2'
-  gem.add_development_dependency 'simplecov', '~> 0.7.1'
+  gem.add_development_dependency 'rspec',     '~> 3.1.0'
+  gem.add_development_dependency 'rack',      '~> 1.6.0'
+  gem.add_development_dependency 'rack-test', '~> 0.6.3'
+  gem.add_development_dependency 'simplecov', '~> 0.9.1'
 
   gem.files         = `git ls-files`.split($INPUT_RECORD_SEPARATOR)
   gem.executables   = gem.files.grep(%r{^bin/}).map { |f| File.basename(f) }
