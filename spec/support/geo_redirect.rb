@@ -5,7 +5,7 @@ module GeoRedirect
     end
 
     def nonexisting_file_path
-      "/no_such_file"
+      '/no_such_file'
     end
 
     def app
@@ -14,16 +14,16 @@ module GeoRedirect
 
     def mock_app(options = {})
       # Simple HTTP server that always returns 'Hello world!'
-      main_app = lambda { |env|
+      main_app = lambda do |env|
         Rack::Request.new(env)
-        headers = {"Content-Type" => "text/html"}
-        [200, headers, ["Hello world!"]]
-      }
+        headers = { 'Content-Type' => 'text/html' }
+        [200, headers, ['Hello world!']]
+      end
 
-      @logfile = Tempfile.new("log")
-      options = { :config => fixture_path("config.yml"),
-                  :db => fixture_path("GeoIP.dat"),
-                  :logfile => @logfile.path
+      @logfile = Tempfile.new('log')
+      options = { config: fixture_path('config.yml'),
+                  db: fixture_path('GeoIP.dat'),
+                  logfile: @logfile.path
                 }.merge(options)
 
       builder = Rack::Builder.new
@@ -38,4 +38,3 @@ module GeoRedirect
     end
   end
 end
-

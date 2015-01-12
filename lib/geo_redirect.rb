@@ -6,8 +6,5 @@ module GeoRedirect
   DEFAULT_CONFIG_PATH = 'config/geo_redirect.yml'
 
   # Load rake tasks
-  if defined? Rails
-    require 'geo_redirect/railtie'
-  end
-
+  require 'geo_redirect/railtie' if defined? Rails
 end

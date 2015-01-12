@@ -1,0 +1,16 @@
+require: rubocop-rspec
+
+Style/Documentation:
+  Enabled: false
+
+Metrics/MethodLength:
+  Max: 15
+
+Metrics/ClassLength:
+  Max: 154
+
+Style/RescueModifier:
+  Enabled: false
+
+Style/RegexpLiteral:
+  Enabled: false
