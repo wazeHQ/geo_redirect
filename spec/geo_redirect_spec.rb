@@ -7,7 +7,7 @@ describe "geo_redirect" do
   include Rack::Test::Methods
 
   def session
-    last_request.env['rack.session']
+    last_request.env['rack.session'] || {}
   end
 
   def url_scheme
@@ -144,9 +144,8 @@ describe "geo_redirect" do
       end
 
       args = {}
-      if options[:force]
-        args[:redirect] = 1
-      end
+      args[:redirect] = 1 if options[:force]
+      args[:skip_geo] = true if options[:skip]
 
       get "/", args, env
     end
@@ -287,6 +286,24 @@ describe "geo_redirect" do
       end
     end
 
+    describe "with skip flag" do
+      before :each do
+        mock_request_from "US", :skip => true
+      end
+
+      it "does not store decision in session" do
+        should_remember nil
+      end
+
+      it "does not store discovered country in session" do
+        should_remember_country nil
+      end
+
+      it "does not redirect" do
+        should_not_redirect
+      end
+    end
+
     describe "with no recognizable IP" do
       before :each do
         mock_request_from nil
@@ -304,7 +321,6 @@ describe "geo_redirect" do
         should_remember_country nil
       end
     end
-
   end
 end
 

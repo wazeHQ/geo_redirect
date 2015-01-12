@@ -22,7 +22,10 @@ module GeoRedirect
     def call(env)
       @request = Rack::Request.new(env)
 
-      if force_redirect?
+      if skip_redirect?
+        @app.call(env)
+
+      elsif force_redirect?
         handle_force
 
       elsif session_exists?
@@ -53,6 +56,11 @@ module GeoRedirect
     def force_redirect?
       url = URI.parse(@request.url)
       Rack::Utils.parse_query(url.query).key? 'redirect'
+    end
+
+    def skip_redirect?
+      url = URI.parse(@request.url)
+      Rack::Utils.parse_query(url.query).key? 'skip_geo'
     end
 
     def handle_force
