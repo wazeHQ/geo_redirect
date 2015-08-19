@@ -12,9 +12,10 @@ module GeoRedirect
 
       @app = app
 
-      @logger = init_logger(options[:logfile]) if options[:logfile]
-      @db     = init_db(options[:db])
-      @config = init_config(options[:config])
+      @logger   = init_logger(options[:logfile]) if options[:logfile]
+      @db       = init_db(options[:db])
+      @config   = init_config(options[:config])
+      @excludes = Array(options[:exclude])
 
       log 'Initialized middleware'
     end
@@ -60,7 +61,15 @@ module GeoRedirect
 
     def skip_redirect?
       url = URI.parse(@request.url)
+      query_includes_skip_geo?(url) or path_excluded?(url)
+    end
+
+    def query_includes_skip_geo?(url)
       Rack::Utils.parse_query(url.query).key? 'skip_geo'
+    end
+
+    def path_excluded?(url)
+      @excludes.reduce(false){ | result, exclude | result || url.path == exclude }
     end
 
     def handle_force

@@ -122,6 +122,9 @@ describe 'geo_redirect' do
         country = GeoIP::Country.stub(country_code2: code,
                                       country_code: 5)
       end
+
+      options[:path] ||= '/'
+
       @app.db.stub(:country).with(ip).and_return(country)
 
       env = { 'REMOTE_ADDR' => ip, 'HTTP_HOST' => 'biz.waze.co.il' }
@@ -136,7 +139,7 @@ describe 'geo_redirect' do
       args[:redirect] = 1 if options[:force]
       args[:skip_geo] = true if options[:skip]
 
-      get '/', args, env
+      get options[:path], args, env
     end
 
     def should_redirect_to(host)
@@ -226,6 +229,42 @@ describe 'geo_redirect' do
       it { should_not_redirect }
       it { should_remember nil }
       it { should_remember_country nil }
+    end
+
+    describe 'with an exclude option set' do
+      before :each do
+        mock_app exclude: ['/exclude_me', '/exclude_me/too']
+      end
+
+      context 'when the request URL matches one of the excluded paths' do
+        before {mock_request_from 'US', path: '/exclude_me?query_param=value'}
+
+        it { should_not_redirect }
+        it { should_remember nil }
+        it { should_remember_country nil }
+      end
+
+      context 'when the request URL does not match one of the excluded paths' do
+        before {mock_request_from 'US', path: '/dont_exclude_me?query_param=value'}
+
+        it { should_redirect_to :us }
+        it { should_remember :us }
+        it { should_remember_country 'US' }
+      end
+    end
+
+    describe 'with a single excluded path' do
+      before :each do
+        mock_app exclude: '/exclude_me'
+      end
+
+      context 'when the request URL matches one of the excluded paths' do
+        before {mock_request_from 'US', path: '/exclude_me?query_param=value'}
+
+        it { should_not_redirect }
+        it { should_remember nil }
+        it { should_remember_country nil }
+      end
     end
   end
 end
