@@ -237,7 +237,7 @@ describe 'geo_redirect' do
       end
 
       context 'when the request URL matches one of the excluded paths' do
-        before {mock_request_from 'US', path: '/exclude_me?query_param=value'}
+        before { mock_request_from 'US', path: '/exclude_me?query_param=value' }
 
         it { should_not_redirect }
         it { should_remember nil }
@@ -245,7 +245,7 @@ describe 'geo_redirect' do
       end
 
       context 'when the request URL does not match one of the excluded paths' do
-        before {mock_request_from 'US', path: '/dont_exclude_me?query_param=value'}
+        before { mock_request_from 'US', path: '/dont_exclude_me?query_param=value' }
 
         it { should_redirect_to :us }
         it { should_remember :us }
@@ -259,7 +259,7 @@ describe 'geo_redirect' do
       end
 
       context 'when the request URL matches one of the excluded paths' do
-        before {mock_request_from 'US', path: '/exclude_me?query_param=value'}
+        before { mock_request_from 'US', path: '/exclude_me?query_param=value' }
 
         it { should_not_redirect }
         it { should_remember nil }

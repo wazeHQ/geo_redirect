@@ -69,7 +69,7 @@ module GeoRedirect
     end
 
     def path_excluded?(url)
-      @excludes.reduce(false){ | result, exclude | result || url.path == exclude }
+      @excludes.any?{ | exclude | url.path == exclude }
     end
 
     def handle_force
