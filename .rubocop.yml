@@ -7,10 +7,29 @@ Metrics/MethodLength:
   Max: 15
 
 Metrics/ClassLength:
-  Max: 154
+  Max: 170
 
 Style/RescueModifier:
   Enabled: false
 
 Style/RegexpLiteral:
   Enabled: false
+
+RSpec/InstanceVariable:
+  Enabled: false
+
+Style/BlockDelimiters:
+  Exclude:
+    - 'spec/**/*'
+
+Style/BlockEndNewline:
+  Exclude:
+    - 'spec/**/*'
+
+Style/MultilineBlockLayout:
+  Exclude:
+    - 'spec/**/*'
+
+RSpec/DescribeClass:
+  Exclude:
+    - 'spec/lib/tasks/*'

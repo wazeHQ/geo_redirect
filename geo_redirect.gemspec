@@ -4,13 +4,14 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'geo_redirect/version'
 
 Gem::Specification.new do |gem|
-  gem.name          = 'geo_redirect'
-  gem.version       = GeoRedirect::VERSION
-  gem.authors       = ['Sagie Maoz']
-  gem.email         = ['sagie@waze.com']
-  gem.description   = 'Geo-location based redirector'
-  gem.summary       = 'Rack middleware to redirect clients to hostnames based on geo-location'
-  gem.homepage      = ''
+  gem.name        = 'geo_redirect'
+  gem.version     = GeoRedirect::VERSION
+  gem.authors     = ['Sagie Maoz']
+  gem.email       = ['sagie@waze.com']
+  gem.description = 'Geo-location based redirector'
+  gem.summary =
+    'Rack middleware to redirect clients to hostnames based on geo-location'
+  gem.homepage = ''
 
   gem.add_dependency 'rake'
   gem.add_dependency 'geoip'

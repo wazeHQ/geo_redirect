@@ -34,7 +34,7 @@ module GeoRedirect
 
     def log_should_include(message)
       @logfile.rewind
-      @logfile.read.should include(message)
+      expect(@logfile.read).to include(message)
     end
   end
 end

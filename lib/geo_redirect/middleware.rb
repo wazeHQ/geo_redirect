@@ -7,7 +7,7 @@ module GeoRedirect
 
     def initialize(app, options = {})
       # Some defaults
-      options[:db]     ||= DEFAULT_DB_PATH
+      options[:db] ||= DEFAULT_DB_PATH
       options[:config] ||= DEFAULT_CONFIG_PATH
 
       @app = app
@@ -61,7 +61,7 @@ module GeoRedirect
 
     def skip_redirect?
       url = URI.parse(@request.url)
-      query_includes_skip_geo?(url) or path_excluded?(url)
+      query_includes_skip_geo?(url) || path_excluded?(url)
     end
 
     def query_includes_skip_geo?(url)
@@ -69,7 +69,7 @@ module GeoRedirect
     end
 
     def path_excluded?(url)
-      @excludes.any?{ | exclude | url.path == exclude }
+      @excludes.any? { |exclude| url.path == exclude }
     end
 
     def handle_force
@@ -182,10 +182,10 @@ module GeoRedirect
       ip = request_ip
       log "Handling GeoIP lookup: IP #{ip}"
 
-      res  = @db.country(ip)
-      code = res[:country_code]
+      country = @db.country(ip)
+      code = country[:country_code]
 
-      res[:country_code2] unless code.nil? || code.zero?
+      country[:country_code2] unless code.nil? || code.zero?
     end
 
     def redirect_url(hostname)
@@ -208,7 +208,7 @@ module GeoRedirect
     def should_redirect?(hostname, same_host)
       return true if hostname.nil? || same_host
 
-      hostname_ends_with = %r{#{hostname.gsub(".", "\.")}$}
+      hostname_ends_with = %r{#{hostname.tr('.', '\.')}$}
       (@request.host =~ hostname_ends_with).nil?
     end
   end
