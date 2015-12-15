@@ -110,7 +110,7 @@ will match `www.myapp.com/exclude` but not `www.myapp.com/other/path/exclude`
 
 The default paths for these files are:
 
-1. `config/georedirect.yml`
+1. `config/geo_redirect.yml`
 2. `db/GeoIP.dat`
 
 If that doesn't suit you, you can customize these when adding `GeoRedirect` to
