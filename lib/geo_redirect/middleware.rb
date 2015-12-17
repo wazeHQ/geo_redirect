@@ -38,7 +38,7 @@ module GeoRedirect
     end
 
     def session_exists?
-      host = @request.session['geo_redirect']
+      host = @request.session['geo_redirect'].try(:to_sym)
       if host && @config[host].nil? # Invalid var, remove it
         log 'Invalid session var, forgetting'
         forget_host(host)
@@ -49,7 +49,7 @@ module GeoRedirect
     end
 
     def handle_session
-      host = @request.session['geo_redirect']
+      host = @request.session['geo_redirect'].try(:to_sym)
       log "Handling session var: #{host}"
       redirect_request(host)
     end
