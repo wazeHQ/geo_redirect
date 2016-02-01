@@ -68,6 +68,11 @@ describe GeoRedirect::Middleware do
       mock_app logfile: '/no_such_file'
       expect(@app.instance_variable_get(:"@logger")).to be_nil
     end
+
+    it 'ignores empty logfile option' do
+      mock_app logfile: nil
+      expect(@app.instance_variable_get(:"@logger")).to be_nil
+    end
   end
 
   describe '#host_by_country' do

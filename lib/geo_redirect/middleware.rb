@@ -6,15 +6,11 @@ module GeoRedirect
     attr_accessor :db, :config
 
     def initialize(app, options = {})
-      # Some defaults
-      options[:db] ||= DEFAULT_DB_PATH
-      options[:config] ||= DEFAULT_CONFIG_PATH
-
       @app = app
 
-      @logger = init_logger(options[:logfile]) if options[:logfile]
-      @db     = init_db(options[:db])
-      @config = init_config(options[:config])
+      @logger = init_logger(options[:logfile])
+      @db     = init_db(options[:db] || DEFAULT_DB_PATH)
+      @config = init_config(options[:config] || DEFAULT_CONFIG_PATH)
 
       @include_paths = Array(options[:include])
       @exclude_paths = Array(options[:exclude])
@@ -153,7 +149,7 @@ module GeoRedirect
     end
 
     def init_logger(path)
-      Logger.new(path)
+      Logger.new(path) if path
     rescue Errno::EINVAL, Errno::EACCES
       nil
     end
