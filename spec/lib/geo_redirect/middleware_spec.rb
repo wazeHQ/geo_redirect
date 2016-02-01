@@ -50,7 +50,7 @@ describe GeoRedirect::Middleware do
   end
 
   describe '#log' do
-    describe 'with valid logfile path' do
+    context 'with valid logfile path' do
       before { mock_app }
 
       it 'initiates a log file' do
@@ -66,6 +66,11 @@ describe GeoRedirect::Middleware do
 
     it 'ignores invalid logfile path' do
       mock_app logfile: '/no_such_file'
+      expect(@app.instance_variable_get(:"@logger")).to be_nil
+    end
+
+    it 'ignores empty logfile option' do
+      mock_app logfile: nil
       expect(@app.instance_variable_get(:"@logger")).to be_nil
     end
   end
@@ -157,22 +162,22 @@ describe GeoRedirect::Middleware do
       end
     end
 
-    describe 'without session memory' do
-      describe 'for a foreign source' do
+    context 'without session memory' do
+      context 'for a foreign source' do
         let(:country_code) { 'US' }
         it { is_expected.to redirect_to :us }
         it { is_expected.to remember :us }
         it { is_expected.to remember_country 'US' }
       end
 
-      describe 'for a local source' do
+      context 'for a local source' do
         let(:country_code) { 'IL' }
         it { is_expected.to not_redirect }
         it { is_expected.to remember :il }
         it { is_expected.to remember_country 'IL' }
       end
 
-      describe 'for an unknown source' do
+      context 'for an unknown source' do
         let(:country_code) { 'SOMEWHERE OVER THE RAINBOW' }
         it { is_expected.to redirect_to :default }
         it { is_expected.to remember :default }
@@ -180,7 +185,7 @@ describe GeoRedirect::Middleware do
       end
     end
 
-    describe 'with valid session memory' do
+    context 'with valid session memory' do
       let(:request_session) { :default }
       let(:country_code) { 'US' }
       it { is_expected.to redirect_to :default }
@@ -188,7 +193,7 @@ describe GeoRedirect::Middleware do
       it { is_expected.to remember_country 'US' }
     end
 
-    describe 'with invalid session memory' do
+    context 'with invalid session memory' do
       let(:request_session) { 'foo' }
       let(:country_code) { 'US' }
 
@@ -201,7 +206,7 @@ describe GeoRedirect::Middleware do
       it { is_expected.to remember_country 'US' }
     end
 
-    describe 'with forced redirect flag' do
+    context 'with forced redirect flag' do
       let(:country_code) { 'US' }
       let(:request_args) { { redirect: 1 } }
 
@@ -214,7 +219,7 @@ describe GeoRedirect::Middleware do
       it { is_expected.to remember_country nil }
     end
 
-    describe 'with skip flag' do
+    context 'with skip flag' do
       let(:country_code) { 'US' }
       let(:request_args) { { skip_geo: true } }
       it { is_expected.to not_redirect }
@@ -222,45 +227,90 @@ describe GeoRedirect::Middleware do
       it { is_expected.to remember_country nil }
     end
 
-    describe 'with no recognizable IP' do
+    context 'with no recognizable IP' do
       let(:country_code) { nil }
       it { is_expected.to not_redirect }
       it { is_expected.to remember nil }
       it { is_expected.to remember_country nil }
     end
 
-    describe 'with an exclude option set' do
-      let(:app_options) { { exclude: ['/exclude_me', '/exclude_me/too'] } }
+    describe 'include/exclude logic' do
+      let(:country_code) { 'US' }
 
-      context 'when the request URL matches one of the excluded paths' do
-        let(:country_code) { 'US' }
-        let(:request_path) { '/exclude_me?query_param=value' }
-
+      shared_examples :skips_redirect do
         it { is_expected.to not_redirect }
         it { is_expected.to remember nil }
         it { is_expected.to remember_country nil }
       end
 
-      context 'when the request URL does not match one of the excluded paths' do
-        let(:country_code) { 'US' }
-        let(:request_path) { '/dont_exclude_me?query_param=value' }
-
+      shared_examples :does_not_skip_redirect do
         it { is_expected.to redirect_to :us }
         it { is_expected.to remember :us }
         it { is_expected.to remember_country 'US' }
       end
-    end
 
-    describe 'with a single excluded path' do
-      let(:app_options) { { exclude: '/exclude_me' } }
+      context 'with an include option' do
+        let(:app_options) { { include: include_value } }
 
-      context 'when the request URL matches one of the excluded paths' do
-        let(:country_code) { 'US' }
-        let(:request_path) { '/exclude_me?query_param=value' }
+        context 'when include is an array of paths' do
+          let(:include_value) { %w(/include_me /include_me/too) }
 
-        it { is_expected.to not_redirect }
-        it { is_expected.to remember nil }
-        it { is_expected.to remember_country nil }
+          context 'when request URL matches one of the included paths' do
+            let(:request_path) { '/include_me?query_param=value' }
+            it_behaves_like :does_not_skip_redirect
+          end
+
+          context 'when request URL does not match any of the included paths' do
+            let(:request_path) { '/dont_include_me?query_param=value' }
+            it_behaves_like :skips_redirect
+          end
+        end
+
+        context 'when include is a single path' do
+          let(:include_value) { '/include_me' }
+
+          context 'when request URL matches one of the included paths' do
+            let(:request_path) { '/include_me?query_param=value' }
+            it_behaves_like :does_not_skip_redirect
+          end
+
+          context 'when request URL does not match any of the included paths' do
+            let(:request_path) { '/dont_include_me?query_param=value' }
+            it_behaves_like :skips_redirect
+          end
+        end
+      end
+
+      context 'with an exclude option' do
+        let(:app_options) { { exclude: exclude_value } }
+
+        context 'when exclude is an array of paths' do
+          let(:exclude_value) { %w(/exclude_me /exclude_me/too) }
+
+          context 'when request URL matches one of the excluded paths' do
+            let(:request_path) { '/exclude_me?query_param=value' }
+            it_behaves_like :skips_redirect
+          end
+
+          context 'when request URL does not match any of the excluded paths' do
+            let(:request_path) { '/dont_exclude_me?query_param=value' }
+            it_behaves_like :does_not_skip_redirect
+          end
+        end
+
+        context 'when exclude is a single path' do
+          let(:exclude_value) { '/exclude_me' }
+
+          context 'when request URL matches the excluded path' do
+            let(:request_path) { '/exclude_me?query_param=value' }
+            it_behaves_like :skips_redirect
+          end
+
+          context 'when request URL does not match any of the excluded paths' do
+            let(:request_path) { '/dont_exclude_me?query_param=value' }
+            it_behaves_like :does_not_skip_redirect
+          end
+        end
       end
     end
   end

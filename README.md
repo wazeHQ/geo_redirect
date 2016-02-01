@@ -90,21 +90,27 @@ and unzip it into `db/` in your project, **or** you could use the following
 It'd be a good idea to use this task on your (Capistrano or whatever) deployment
 scripts.
 
-### Excluding certain URLs from redirection
+### Scoping redirects for certain URLs
 
-You may want certain URLs in your app to be ignored by GeoRedirect and to 
-respond normally to *all* incoming requests. You can configure this with the 
-`:exclude` option. 
+By default, GeoRedirect runs on *all* incoming requests and redirects
+accordingly.
+
+You may want GeoRedirect to either ignore some URLs (a blacklist), or only run
+the redirection logic over a certain list of URLs (a whitelist). This can be
+done through the `:exclude` and `:include` options.
+
+    Rails.application.middleware.use GeoRedirect::Middleware, include: '/'
+
+will only redirect incoming requests to 'example.org/', and ignore any other
+paths.
 
     Rails.application.middleware.use GeoRedirect::Middleware, exclude: '/excluded_path'
-    
-The value of the option can be a string or an array of strings which represent 
-the path(s) to be excluded. Note that each string must be an exact match of the 
-path portion of the URL, including the leading slash.
 
-    Rails.application.middleware.use GeoRedirect::Middleware, exclude: '/exclude'
-    
-will match `www.myapp.com/exclude` but not `www.myapp.com/other/path/exclude`
+will ignore requests to 'example.org/excluded_path' but redirect all other
+incoming requests.
+
+The value for both options can be either a single path string or an array of
+paths. All should include the leading slash.
 
 ### Custom paths
 
