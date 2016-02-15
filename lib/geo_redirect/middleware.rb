@@ -12,6 +12,7 @@ module GeoRedirect
       @db     = init_db(options[:db] || DEFAULT_DB_PATH)
       @config = init_config(options[:config] || DEFAULT_CONFIG_PATH)
 
+      @only_first = options[:only_first]
       @include_paths = Array(options[:include])
       @exclude_paths = Array(options[:exclude])
 
@@ -61,6 +62,12 @@ module GeoRedirect
 
     def skip_redirect?
       url = URI.parse(@request.url)
+
+      if @only_first
+        host = host_by_hostname(url.host)
+        remember_host(host)
+      end
+
       query_includes_skip_geo?(url) ||
         path_not_whitelisted?(url) ||
         path_blacklisted?(url)
