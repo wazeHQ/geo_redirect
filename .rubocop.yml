@@ -7,7 +7,7 @@ Metrics/MethodLength:
   Max: 15
 
 Metrics/ClassLength:
-  Max: 175
+  Max: 180
 
 Style/RescueModifier:
   Enabled: false

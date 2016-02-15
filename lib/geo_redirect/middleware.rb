@@ -7,6 +7,7 @@ module GeoRedirect
 
     def initialize(app, options = {})
       @app = app
+      @options = options
 
       @logger = init_logger(options[:logfile])
       @db     = init_db(options[:db] || DEFAULT_DB_PATH)
@@ -14,7 +15,6 @@ module GeoRedirect
 
       @include_paths = Array(options[:include])
       @exclude_paths = Array(options[:exclude])
-      @skip_if_block = options[:skip_if]
 
       log 'Initialized middleware'
     end
@@ -23,6 +23,7 @@ module GeoRedirect
       @request = Rack::Request.new(env)
 
       if skip_redirect?
+        remember_host(request_host) if @options[:remember_when_skipping]
         @app.call(env)
 
       elsif force_redirect?
@@ -56,15 +57,13 @@ module GeoRedirect
     end
 
     def force_redirect?
-      url = URI.parse(@request.url)
-      Rack::Utils.parse_query(url.query).key? 'redirect'
+      Rack::Utils.parse_query(request_url.query).key? 'redirect'
     end
 
     def skip_redirect?
-      url = URI.parse(@request.url)
-      query_includes_skip_geo?(url) ||
-        path_not_whitelisted?(url) ||
-        path_blacklisted?(url) ||
+      query_includes_skip_geo?(request_url) ||
+        path_not_whitelisted?(request_url) ||
+        path_blacklisted?(request_url) ||
         skipped_by_block?
     end
 
@@ -73,7 +72,7 @@ module GeoRedirect
     end
 
     def path_not_whitelisted?(url)
-      @include_paths.length > 0 &&
+      !@include_paths.empty? &&
         !@include_paths.any? { |exclude| url.path == exclude }
     end
 
@@ -82,15 +81,13 @@ module GeoRedirect
     end
 
     def skipped_by_block?
-      @skip_if_block && @skip_if_block.call(@request)
+      @options[:skip_if] && @options[:skip_if].call(@request)
     end
 
     def handle_force
-      url = URI.parse(@request.url)
-      host = host_by_hostname(url.host)
-      log "Handling force flag: #{host}"
-      remember_host(host)
-      redirect_request(url.host, true)
+      log 'Handling force flag'
+      remember_host(request_host)
+      redirect_request(request_url.host, true)
     end
 
     def handle_geoip
@@ -174,7 +171,7 @@ module GeoRedirect
     end
 
     def init_config(path)
-      YAML.load_file(path) || fail(Errno::EINVAL)
+      YAML.load_file(path) || raise(Errno::EINVAL)
     rescue Errno::EINVAL, Errno::ENOENT, Psych::SyntaxError, SyntaxError
       message = <<-ERROR
         Could not load GeoRedirect config YML file.
@@ -191,6 +188,14 @@ module GeoRedirect
       ip_address.split(',').first.strip
     end
 
+    def request_url
+      @request_url ||= URI.parse(@request.url)
+    end
+
+    def request_host
+      host_by_hostname(request_url.host)
+    end
+
     def country_from_request
       ip = request_ip
       log "Handling GeoIP lookup: IP #{ip}"
@@ -202,7 +207,7 @@ module GeoRedirect
     end
 
     def redirect_url(hostname)
-      url = URI.parse(@request.url)
+      url = request_url.clone
       url.port = nil
       url.host = hostname if hostname
 

@@ -225,6 +225,24 @@ describe GeoRedirect::Middleware do
       it { is_expected.to not_redirect }
       it { is_expected.to remember nil }
       it { is_expected.to remember_country nil }
+
+      context 'with remember_when_skipping option set to true' do
+        let(:app_options) { { remember_when_skipping: true } }
+        let(:country_code) { 'IL' }
+        let(:request_args) { { skip_geo: true } }
+        it { is_expected.to not_redirect }
+        it { is_expected.to remember :il }
+        it { is_expected.to remember_country nil }
+      end
+
+      context 'with remember_when_skipping option set to false' do
+        let(:app_options) { { remember_when_skipping: false } }
+        let(:country_code) { 'IL' }
+        let(:request_args) { { skip_geo: true } }
+        it { is_expected.to not_redirect }
+        it { is_expected.to remember nil }
+        it { is_expected.to remember_country nil }
+      end
     end
 
     context 'with no recognizable IP' do

@@ -20,7 +20,7 @@ URL, and by that forcing the server to host from the current domain (and saving
 that domain to the user's session variable).
 
 To skip geo-redirection completely, pass a `?skip_geo=true` argument (this would
-avoid saving any session value and/or HTTP redirects).
+avoid saving any session value and/or HTTP redirects.
 
 ## Installation
 
@@ -134,6 +134,17 @@ You can pass a block to the `:skip_if` option to provide custom logic to skip th
     Rails.application.middleware.use GeoRedirect::Middleware, skip_if: ->(req) { req.bot? }
 
 will ignore requests from bots (the code inside the block is just pseudo-code).
+
+### Skipping
+
+As mentioned, skipping Geo-redirection is done either by:
+
+* `redirect=1` to force a new domain and remember it in the user's session variable.
+* `skip_geo=true` for a one-time force (with no memory).
+
+If the `:remember_when_skipping` option flag is set to true, the server will
+always remember the current domain, even after skipping.
+
 
 ### Debugging
 

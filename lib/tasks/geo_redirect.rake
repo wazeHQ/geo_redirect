@@ -3,7 +3,7 @@ require 'open-uri'
 require 'zlib'
 
 namespace :geo_redirect do
-  DB_URI = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz'
+  DB_URI = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz'.freeze
 
   desc 'Fetches an updated copy of the GeoIP countries DB from MaxMind'
   task :fetch_db, :db_path do |_t, args|

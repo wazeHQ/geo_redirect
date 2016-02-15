@@ -11,7 +11,8 @@ shared_context 'rake' do
   before do
     Rake.application = rake
     Rake.application
-      .rake_require(task_path, [File.join(File.dirname(__FILE__), '..', '..')])
+        .rake_require(task_path,
+                      [File.join(File.dirname(__FILE__), '..', '..')])
 
     Rake::Task.define_task(:environment)
   end
