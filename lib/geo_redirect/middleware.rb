@@ -62,15 +62,13 @@ module GeoRedirect
 
     def skip_redirect?
       url = URI.parse(@request.url)
+      host = host_by_hostname(url.host)
 
-      if @only_first
-        host = host_by_hostname(url.host)
-        remember_host(host)
-      end
-
-      query_includes_skip_geo?(url) ||
-        path_not_whitelisted?(url) ||
-        path_blacklisted?(url)
+      return false unless query_includes_skip_geo?(url) ||
+                          path_not_whitelisted?(url) ||
+                          path_blacklisted?(url)
+      remember_host(host) if @only_first
+      true
     end
 
     def query_includes_skip_geo?(url)
