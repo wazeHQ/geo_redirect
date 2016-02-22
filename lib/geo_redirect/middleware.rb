@@ -12,7 +12,7 @@ module GeoRedirect
       @db     = init_db(options[:db] || DEFAULT_DB_PATH)
       @config = init_config(options[:config] || DEFAULT_CONFIG_PATH)
 
-      @redirect_after_skip = options[:redirect_after_skip] || true
+      @redirect_after_skip = options[:redirect_after_skip].nil? ? true : options[:redirect_after_skip]
       @include_paths = Array(options[:include])
       @exclude_paths = Array(options[:exclude])
 
