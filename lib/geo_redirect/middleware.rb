@@ -12,7 +12,7 @@ module GeoRedirect
       @db     = init_db(options[:db] || DEFAULT_DB_PATH)
       @config = init_config(options[:config] || DEFAULT_CONFIG_PATH)
 
-      @only_first = options[:only_first]
+      @redirect_after_skip = options[:redirect_after_skip] || true
       @include_paths = Array(options[:include])
       @exclude_paths = Array(options[:exclude])
 
@@ -23,6 +23,7 @@ module GeoRedirect
       @request = Rack::Request.new(env)
 
       if skip_redirect?
+        handle_redirect_after_skip
         @app.call(env)
 
       elsif force_redirect?
@@ -34,6 +35,46 @@ module GeoRedirect
       else
         handle_geoip
       end
+    end
+
+    def skip_redirect?
+      url = URI.parse(@request.url)
+      query_includes_skip_geo?(url) ||
+        path_not_whitelisted?(url) ||
+        path_blacklisted?(url)
+    end
+
+    def query_includes_skip_geo?(url)
+      Rack::Utils.parse_query(url.query).key? 'skip_geo'
+    end
+
+    def path_not_whitelisted?(url)
+      @include_paths.length > 0 &&
+        !@include_paths.any? { |exclude| url.path == exclude }
+    end
+
+    def path_blacklisted?(url)
+      @exclude_paths.any? { |exclude| url.path == exclude }
+    end
+
+    def handle_redirect_after_skip
+      return if @redirect_after_skip
+      url = URI.parse(@request.url)
+      host = host_by_hostname(url.host)
+      remember_host(host)
+    end
+
+    def force_redirect?
+      url = URI.parse(@request.url)
+      Rack::Utils.parse_query(url.query).key? 'redirect'
+    end
+
+    def handle_force
+      url = URI.parse(@request.url)
+      host = host_by_hostname(url.host)
+      log "Handling force flag: #{host}"
+      remember_host(host)
+      redirect_request(url.host, true)
     end
 
     def session_exists?
@@ -53,43 +94,6 @@ module GeoRedirect
       host = host.is_a?(Symbol) ? host : host.to_sym if host
       log "Handling session var: #{host}"
       redirect_request(host)
-    end
-
-    def force_redirect?
-      url = URI.parse(@request.url)
-      Rack::Utils.parse_query(url.query).key? 'redirect'
-    end
-
-    def skip_redirect?
-      url = URI.parse(@request.url)
-      host = host_by_hostname(url.host)
-
-      return false unless query_includes_skip_geo?(url) ||
-                          path_not_whitelisted?(url) ||
-                          path_blacklisted?(url)
-      remember_host(host) if @only_first
-      true
-    end
-
-    def query_includes_skip_geo?(url)
-      Rack::Utils.parse_query(url.query).key? 'skip_geo'
-    end
-
-    def path_not_whitelisted?(url)
-      @include_paths.length > 0 &&
-        !@include_paths.any? { |exclude| url.path == exclude }
-    end
-
-    def path_blacklisted?(url)
-      @exclude_paths.any? { |exclude| url.path == exclude }
-    end
-
-    def handle_force
-      url = URI.parse(@request.url)
-      host = host_by_hostname(url.host)
-      log "Handling force flag: #{host}"
-      remember_host(host)
-      redirect_request(url.host, true)
     end
 
     def handle_geoip
