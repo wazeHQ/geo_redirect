@@ -12,9 +12,9 @@ module GeoRedirect
       @db     = init_db(options[:db] || DEFAULT_DB_PATH)
       @config = init_config(options[:config] || DEFAULT_CONFIG_PATH)
 
-      @redirect_after_skip = options[:redirect_after_skip].nil? ? true : options[:redirect_after_skip]
       @include_paths = Array(options[:include])
       @exclude_paths = Array(options[:exclude])
+      @redirect_after_skip = init_redirect_after_skip(options[:redirect_after_skip])
 
       log 'Initialized middleware'
     end
@@ -185,6 +185,10 @@ module GeoRedirect
         when adding the GeoRedirect middlware.
       ERROR
       log(message, :error)
+    end
+
+    def init_redirect_after_skip(redirect_after_skip_option)
+      redirect_after_skip_option.nil? || redirect_after_skip_option
     end
 
     def request_ip
