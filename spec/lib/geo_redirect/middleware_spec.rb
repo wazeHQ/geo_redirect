@@ -234,6 +234,24 @@ describe GeoRedirect::Middleware do
       it { is_expected.to remember_country nil }
     end
 
+    context 'with skip_if block' do
+      let(:country_code) { 'US' }
+
+      context 'when returns true' do
+        let(:app_options) { { skip_if: ->(_req) { true } } }
+        it { is_expected.to not_redirect }
+        it { is_expected.to remember nil }
+        it { is_expected.to remember_country nil }
+      end
+
+      context 'when returns false' do
+        let(:app_options) { { skip_if: ->(_req) { false } } }
+        it { is_expected.to redirect_to :us }
+        it { is_expected.to remember :us }
+        it { is_expected.to remember_country 'US' }
+      end
+    end
+
     describe 'include/exclude logic' do
       let(:country_code) { 'US' }
 
