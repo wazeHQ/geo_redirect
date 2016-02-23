@@ -127,10 +127,18 @@ your project:
 	  	config: 'geo_cfg.yml'
 	  }
 
+### Custom logic to skip the redirection
+
+You can pass a block to the `:skip_if` option to provide custom logic to skip the redirection.
+
+    Rails.application.middleware.use GeoRedirect::Middleware, skip_if: ->(req) { req.bot? }
+
+will ignore requests from bots (the code inside the block is just pseudo-code).
+
 ### Debugging
 
 You can add a `logfile` path string when adding the middleware if you want it to
-log some of its decision process into the file.  
+log some of its decision process into the file.
 This is useful when working on your configuration YAML.
 
 	Rails.application.middleware.use GeoRedirect::Middleware, logfile: 'log/geo_redirect.log'
@@ -140,7 +148,7 @@ This is useful when working on your configuration YAML.
 ### Accessing discovered country
 
 The country code discovered for the current user is available for your
-convenience, under `session['geo_redirect.country']`.  
+convenience, under `session['geo_redirect.country']`.
 You can use it to make content decisions, or whatever.
 
 ## Known Issues
