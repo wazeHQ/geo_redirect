@@ -62,10 +62,8 @@ module GeoRedirect
 
     def skip_redirect?
       url = URI.parse(@request.url)
-      query_includes_skip_geo?(url) ||
-        path_not_whitelisted?(url) ||
-        path_blacklisted?(url) ||
-        skip_if?
+      query_includes_skip_geo?(url) || path_not_whitelisted?(url) ||
+        path_blacklisted?(url) || skip_if?
     end
 
     def query_includes_skip_geo?(url)
@@ -116,8 +114,7 @@ module GeoRedirect
         url = redirect_url(hostname)
 
         log "Redirecting to #{url}"
-        [301,
-         { 'Location' => url.to_s, 'Content-Type' => 'text/plain' },
+        [301, { 'Location' => url.to_s, 'Content-Type' => 'text/plain' },
          ['Moved Permanently\n']]
       else
         @app.call(@request.env)
