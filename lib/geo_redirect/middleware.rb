@@ -14,7 +14,7 @@ module GeoRedirect
 
       @include_paths = Array(options[:include])
       @exclude_paths = Array(options[:exclude])
-      @redirect_later = init_redirect_later_option(options[:redirect_later])
+      @redirect_later = init_redirect_later(options[:redirect_later])
 
       log 'Initialized middleware'
     end
