@@ -226,8 +226,8 @@ describe GeoRedirect::Middleware do
       it { is_expected.to remember nil }
       it { is_expected.to remember_country nil }
 
-      context 'and with redirect_after_skip option set to false' do
-        let(:app_options) { { redirect_after_skip: false } }
+      context 'and with redirect_later option set to false' do
+        let(:app_options) { { redirect_later: false } }
         let(:country_code) { 'IL' }
         let(:request_args) { { skip_geo: true } }
         it { is_expected.to not_redirect }
@@ -235,8 +235,8 @@ describe GeoRedirect::Middleware do
         it { is_expected.to remember_country nil }
       end
 
-      context 'and with redirect_after_skip option set to true' do
-        let(:app_options) { { redirect_after_skip: true } }
+      context 'and with redirect_later option set to true' do
+        let(:app_options) { { redirect_later: true } }
         let(:country_code) { 'IL' }
         let(:request_args) { { skip_geo: true } }
         it { is_expected.to not_redirect }
