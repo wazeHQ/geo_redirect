@@ -14,6 +14,7 @@ module GeoRedirect
 
       @include_paths = Array(options[:include])
       @exclude_paths = Array(options[:exclude])
+      @skip_if_block = options[:skip_if]
 
       log 'Initialized middleware'
     end
@@ -61,9 +62,8 @@ module GeoRedirect
 
     def skip_redirect?
       url = URI.parse(@request.url)
-      query_includes_skip_geo?(url) ||
-        path_not_whitelisted?(url) ||
-        path_blacklisted?(url)
+      query_includes_skip_geo?(url) || path_not_whitelisted?(url) ||
+        path_blacklisted?(url) || skip_if?
     end
 
     def query_includes_skip_geo?(url)
@@ -77,6 +77,10 @@ module GeoRedirect
 
     def path_blacklisted?(url)
       @exclude_paths.any? { |exclude| url.path == exclude }
+    end
+
+    def skip_if?
+      @skip_if_block.nil? ? false : @skip_if_block.call(@request)
     end
 
     def handle_force
@@ -110,8 +114,7 @@ module GeoRedirect
         url = redirect_url(hostname)
 
         log "Redirecting to #{url}"
-        [301,
-         { 'Location' => url.to_s, 'Content-Type' => 'text/plain' },
+        [301, { 'Location' => url.to_s, 'Content-Type' => 'text/plain' },
          ['Moved Permanently\n']]
       else
         @app.call(@request.env)
