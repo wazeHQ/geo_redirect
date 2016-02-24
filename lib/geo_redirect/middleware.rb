@@ -14,6 +14,7 @@ module GeoRedirect
 
       @include_paths = Array(options[:include])
       @exclude_paths = Array(options[:exclude])
+      @redirect_later = init_redirect_later(options[:redirect_later])
 
       log 'Initialized middleware'
     end
@@ -22,6 +23,7 @@ module GeoRedirect
       @request = Rack::Request.new(env)
 
       if skip_redirect?
+        handle_redirect_later
         @app.call(env)
 
       elsif force_redirect?
@@ -33,30 +35,6 @@ module GeoRedirect
       else
         handle_geoip
       end
-    end
-
-    def session_exists?
-      host = @request.session['geo_redirect']
-      host = host.to_sym if host && host.respond_to?(:to_sym)
-      if host && @config[host].nil? # Invalid var, remove it
-        log 'Invalid session var, forgetting'
-        forget_host(host)
-        host = nil
-      end
-
-      !host.nil?
-    end
-
-    def handle_session
-      host = @request.session['geo_redirect']
-      host = host.is_a?(Symbol) ? host : host.to_sym if host
-      log "Handling session var: #{host}"
-      redirect_request(host)
-    end
-
-    def force_redirect?
-      url = URI.parse(@request.url)
-      Rack::Utils.parse_query(url.query).key? 'redirect'
     end
 
     def skip_redirect?
@@ -79,12 +57,43 @@ module GeoRedirect
       @exclude_paths.any? { |exclude| url.path == exclude }
     end
 
+    def handle_redirect_later
+      return if @redirect_later
+      url = URI.parse(@request.url)
+      host = host_by_hostname(url.host)
+      remember_host(host)
+    end
+
+    def force_redirect?
+      url = URI.parse(@request.url)
+      Rack::Utils.parse_query(url.query).key? 'redirect'
+    end
+
     def handle_force
       url = URI.parse(@request.url)
       host = host_by_hostname(url.host)
       log "Handling force flag: #{host}"
       remember_host(host)
       redirect_request(url.host, true)
+    end
+
+    def session_exists?
+      host = @request.session['geo_redirect']
+      host = host.to_sym if host && host.respond_to?(:to_sym)
+      if host && @config[host].nil? # Invalid var, remove it
+        log 'Invalid session var, forgetting'
+        forget_host(host)
+        host = nil
+      end
+
+      !host.nil?
+    end
+
+    def handle_session
+      host = @request.session['geo_redirect']
+      host = host.is_a?(Symbol) ? host : host.to_sym if host
+      log "Handling session var: #{host}"
+      redirect_request(host)
     end
 
     def handle_geoip
@@ -176,6 +185,10 @@ module GeoRedirect
         when adding the GeoRedirect middlware.
       ERROR
       log(message, :error)
+    end
+
+    def init_redirect_later(redirect_later_option)
+      redirect_later_option.nil? || redirect_later_option
     end
 
     def request_ip
