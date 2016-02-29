@@ -14,6 +14,7 @@ module GeoRedirect
 
       @include_paths = Array(options[:include])
       @exclude_paths = Array(options[:exclude])
+      @redirect_later = init_redirect_later(options[:redirect_later])
       @skip_if_block = options[:skip_if]
 
       log 'Initialized middleware'
@@ -23,6 +24,7 @@ module GeoRedirect
       @request = Rack::Request.new(env)
 
       if skip_redirect?
+        handle_redirect_later
         @app.call(env)
 
       elsif force_redirect?
@@ -34,6 +36,47 @@ module GeoRedirect
       else
         handle_geoip
       end
+    end
+
+    def skip_redirect?
+      url = URI.parse(@request.url)
+      query_includes_skip_geo?(url) || path_not_whitelisted?(url) ||
+        path_blacklisted?(url) || skipped_by_block?
+    end
+
+    def query_includes_skip_geo?(url)
+      Rack::Utils.parse_query(url.query).key? 'skip_geo'
+    end
+
+    def path_not_whitelisted?(url)
+      @include_paths.length > 0 &&
+        !@include_paths.any? { |exclude| url.path == exclude }
+    end
+
+    def path_blacklisted?(url)
+      @exclude_paths.any? { |exclude| url.path == exclude }
+    end
+
+    def handle_redirect_later
+      return if @redirect_later
+      host = host_by_hostname(URI.parse(@request.url).host)
+      remember_host(host)
+    end
+
+    def force_redirect?
+      Rack::Utils.parse_query(URI.parse(@request.url).query).key? 'redirect'
+    end
+
+    def skipped_by_block?
+      @skip_if_block && @skip_if_block.call(@request)
+    end
+
+    def handle_force
+      url = URI.parse(@request.url)
+      host = host_by_hostname(url.host)
+      log "Handling force flag: #{host}"
+      remember_host(host)
+      redirect_request(url.host, true)
     end
 
     def session_exists?
@@ -53,44 +96,6 @@ module GeoRedirect
       host = host.is_a?(Symbol) ? host : host.to_sym if host
       log "Handling session var: #{host}"
       redirect_request(host)
-    end
-
-    def force_redirect?
-      url = URI.parse(@request.url)
-      Rack::Utils.parse_query(url.query).key? 'redirect'
-    end
-
-    def skip_redirect?
-      url = URI.parse(@request.url)
-      query_includes_skip_geo?(url) ||
-        path_not_whitelisted?(url) ||
-        path_blacklisted?(url) ||
-        skipped_by_block?
-    end
-
-    def query_includes_skip_geo?(url)
-      Rack::Utils.parse_query(url.query).key? 'skip_geo'
-    end
-
-    def path_not_whitelisted?(url)
-      @include_paths.length > 0 &&
-        !@include_paths.any? { |exclude| url.path == exclude }
-    end
-
-    def path_blacklisted?(url)
-      @exclude_paths.any? { |exclude| url.path == exclude }
-    end
-
-    def skipped_by_block?
-      @skip_if_block && @skip_if_block.call(@request)
-    end
-
-    def handle_force
-      url = URI.parse(@request.url)
-      host = host_by_hostname(url.host)
-      log "Handling force flag: #{host}"
-      remember_host(host)
-      redirect_request(url.host, true)
     end
 
     def handle_geoip
@@ -116,8 +121,7 @@ module GeoRedirect
         url = redirect_url(hostname)
 
         log "Redirecting to #{url}"
-        [301,
-         { 'Location' => url.to_s, 'Content-Type' => 'text/plain' },
+        [301, { 'Location' => url.to_s, 'Content-Type' => 'text/plain' },
          ['Moved Permanently\n']]
       else
         @app.call(@request.env)
@@ -182,6 +186,10 @@ module GeoRedirect
         when adding the GeoRedirect middlware.
       ERROR
       log(message, :error)
+    end
+
+    def init_redirect_later(redirect_later_option)
+      redirect_later_option.nil? || redirect_later_option
     end
 
     def request_ip
