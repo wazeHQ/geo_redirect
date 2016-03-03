@@ -20,7 +20,7 @@ URL, and by that forcing the server to host from the current domain (and saving
 that domain to the user's session variable).
 
 To skip geo-redirection completely, pass a `?skip_geo=true` argument (this would
-avoid saving any session value and/or HTTP redirects.
+avoid saving any session value and/or HTTP redirects).
 
 ## Installation
 
