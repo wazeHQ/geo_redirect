@@ -22,12 +22,14 @@ module GeoRedirect
     def call(env)
       @request = Rack::Request.new(env)
 
-      if skip_redirect?
-        remember_host(request_host) if @options[:remember_when_skipping]
+      url = request_url
+
+      if skip_redirect?(url)
+        remember_host(request_host(url)) if @options[:remember_when_skipping]
         @app.call(env)
 
-      elsif force_redirect?
-        handle_force
+      elsif force_redirect?(url)
+        handle_force(url)
 
       elsif session_exists?
         handle_session
@@ -56,14 +58,14 @@ module GeoRedirect
       redirect_request(host)
     end
 
-    def force_redirect?
-      Rack::Utils.parse_query(request_url.query).key? 'redirect'
+    def force_redirect?(url)
+      Rack::Utils.parse_query(url.query).key? 'redirect'
     end
 
-    def skip_redirect?
-      query_includes_skip_geo?(request_url) ||
-        path_not_whitelisted?(request_url) ||
-        path_blacklisted?(request_url) ||
+    def skip_redirect?(url)
+      query_includes_skip_geo?(url) ||
+        path_not_whitelisted?(url) ||
+        path_blacklisted?(url) ||
         skipped_by_block?
     end
 
@@ -84,10 +86,10 @@ module GeoRedirect
       @options[:skip_if] && @options[:skip_if].call(@request)
     end
 
-    def handle_force
+    def handle_force(url)
       log 'Handling force flag'
-      remember_host(request_host)
-      redirect_request(request_url.host, true)
+      remember_host(request_host(url))
+      redirect_request(url.host, true)
     end
 
     def handle_geoip
@@ -189,11 +191,11 @@ module GeoRedirect
     end
 
     def request_url
-      @request_url ||= URI.parse(@request.url)
+      URI.parse(@request.url)
     end
 
-    def request_host
-      host_by_hostname(request_url.host)
+    def request_host(url)
+      host_by_hostname(url.host)
     end
 
     def country_from_request
