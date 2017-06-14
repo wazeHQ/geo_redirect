@@ -20,51 +20,54 @@ module GeoRedirect
     end
 
     def call(env)
-      @request = Rack::Request.new(env)
+      request = Rack::Request.new(env)
+      url = URI.parse(request.url)
 
-      if skip_redirect?
-        remember_host(request_host) if @options[:remember_when_skipping]
+      if skip_redirect?(request, url)
+        if @options[:remember_when_skipping]
+          remember_host(request, request_host(url))
+        end
         @app.call(env)
 
-      elsif force_redirect?
-        handle_force
+      elsif force_redirect?(url)
+        handle_force(request, url)
 
-      elsif session_exists?
-        handle_session
+      elsif session_exists?(request)
+        handle_session(request)
 
       else
-        handle_geoip
+        handle_geoip(request)
       end
     end
 
-    def session_exists?
-      host = @request.session['geo_redirect']
+    def session_exists?(request)
+      host = request.session['geo_redirect']
       host = host.to_sym if host && host.respond_to?(:to_sym)
       if host && @config[host].nil? # Invalid var, remove it
         log 'Invalid session var, forgetting'
-        forget_host(host)
+        forget_host(request, host)
         host = nil
       end
 
       !host.nil?
     end
 
-    def handle_session
-      host = @request.session['geo_redirect']
+    def handle_session(request)
+      host = request.session['geo_redirect']
       host = host.is_a?(Symbol) ? host : host.to_sym if host
       log "Handling session var: #{host}"
-      redirect_request(host)
+      redirect_request(request, host)
     end
 
-    def force_redirect?
-      Rack::Utils.parse_query(request_url.query).key? 'redirect'
+    def force_redirect?(url)
+      Rack::Utils.parse_query(url.query).key? 'redirect'
     end
 
-    def skip_redirect?
-      query_includes_skip_geo?(request_url) ||
-        path_not_whitelisted?(request_url) ||
-        path_blacklisted?(request_url) ||
-        skipped_by_block?
+    def skip_redirect?(request, url)
+      query_includes_skip_geo?(url) ||
+        path_not_whitelisted?(url) ||
+        path_blacklisted?(url) ||
+        skipped_by_block?(request)
     end
 
     def query_includes_skip_geo?(url)
@@ -73,51 +76,51 @@ module GeoRedirect
 
     def path_not_whitelisted?(url)
       !@include_paths.empty? &&
-        !@include_paths.any? { |exclude| url.path == exclude }
+        @include_paths.none? { |include| url.path == include }
     end
 
     def path_blacklisted?(url)
       @exclude_paths.any? { |exclude| url.path == exclude }
     end
 
-    def skipped_by_block?
-      @options[:skip_if] && @options[:skip_if].call(@request)
+    def skipped_by_block?(request)
+      @options[:skip_if] && @options[:skip_if].call(request)
     end
 
-    def handle_force
+    def handle_force(request, url)
       log 'Handling force flag'
-      remember_host(request_host)
-      redirect_request(request_url.host, true)
+      remember_host(request, request_host(url))
+      redirect_request(request, url.host, true)
     end
 
-    def handle_geoip
-      country = country_from_request rescue nil
-      @request.session['geo_redirect.country'] = country
+    def handle_geoip(request)
+      country = country_from_request(request) rescue nil
+      request.session['geo_redirect.country'] = country
       log "GeoIP match: country code #{country.inspect}"
 
       if country.nil?
-        @app.call(@request.env)
+        @app.call(request.env)
       else
         host = host_by_country(country) # desired host
         log "GeoIP host match: #{host}"
-        remember_host(host)
+        remember_host(request, host)
 
-        redirect_request(host)
+        redirect_request(request, host)
       end
     end
 
-    def redirect_request(host = nil, same_host = false)
+    def redirect_request(request, host = nil, same_host = false)
       hostname = hostname_by_host(host)
 
-      if should_redirect?(hostname, same_host)
-        url = redirect_url(hostname)
+      if should_redirect?(request, hostname, same_host)
+        url = redirect_url(request, hostname)
 
         log "Redirecting to #{url}"
         [301,
          { 'Location' => url.to_s, 'Content-Type' => 'text/plain' },
          ['Moved Permanently\n']]
       else
-        @app.call(@request.env)
+        @app.call(request.env)
       end
     end
 
@@ -135,14 +138,14 @@ module GeoRedirect
       host.is_a?(Symbol) ? @config[host][:host] : host
     end
 
-    def remember_host(host)
+    def remember_host(request, host)
       log "Remembering: #{host}"
-      @request.session['geo_redirect'] = host
+      request.session['geo_redirect'] = host
     end
 
-    def forget_host(host)
+    def forget_host(request, host)
       log "Forgetting: #{host}"
-      remember_host(nil)
+      remember_host(request, nil)
     end
 
     protected
@@ -181,23 +184,19 @@ module GeoRedirect
       log(message, :error)
     end
 
-    def request_ip
+    def request_ip(request)
       ip_address =
-        @request.env['HTTP_X_FORWARDED_FOR'] || @request.env['REMOTE_ADDR']
+        request.env['HTTP_X_FORWARDED_FOR'] || request.env['REMOTE_ADDR']
       # take only the first given ip
       ip_address.split(',').first.strip
     end
 
-    def request_url
-      @request_url ||= URI.parse(@request.url)
+    def request_host(url)
+      host_by_hostname(url.host)
     end
 
-    def request_host
-      host_by_hostname(request_url.host)
-    end
-
-    def country_from_request
-      ip = request_ip
+    def country_from_request(request)
+      ip = request_ip(request)
       log "Handling GeoIP lookup: IP #{ip}"
 
       country = @db.country(ip)
@@ -206,8 +205,8 @@ module GeoRedirect
       country[:country_code2] unless code.nil? || code.zero?
     end
 
-    def redirect_url(hostname)
-      url = request_url.clone
+    def redirect_url(request, hostname)
+      url = URI.parse(request.url)
       url.port = nil
       url.host = hostname if hostname
 
@@ -223,11 +222,11 @@ module GeoRedirect
       url
     end
 
-    def should_redirect?(hostname, same_host)
+    def should_redirect?(request, hostname, same_host)
       return true if hostname.nil? || same_host
 
       hostname_ends_with = %r{#{hostname.tr('.', '\.')}$}
-      (@request.host =~ hostname_ends_with).nil?
+      (request.host =~ hostname_ends_with).nil?
     end
   end
 end
