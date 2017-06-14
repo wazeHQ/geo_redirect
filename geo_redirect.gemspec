@@ -18,9 +18,9 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'geoip'
 
   gem.add_development_dependency 'rspec',           '~> 3.6.0'
-  gem.add_development_dependency 'rack',            '~> 1.6.0'
+  gem.add_development_dependency 'rack',            '~> 2.0.0'
   gem.add_development_dependency 'rack-test',       '~> 0.6.3'
-  gem.add_development_dependency 'simplecov',       '~> 0.9.1'
+  gem.add_development_dependency 'simplecov',       '~> 0.14.1'
   gem.add_development_dependency 'rubocop',         '~> 0.49'
   gem.add_development_dependency 'rubocop-rspec',   '~> 1.15.0'
 
