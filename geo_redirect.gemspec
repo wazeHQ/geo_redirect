@@ -1,4 +1,5 @@
 # -*- encoding: utf-8 -*-
+
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'geo_redirect/version'
@@ -20,8 +21,8 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency 'rack',            '~> 1.6.0'
   gem.add_development_dependency 'rack-test',       '~> 0.6.3'
   gem.add_development_dependency 'simplecov',       '~> 0.9.1'
-  gem.add_development_dependency 'rubocop',         '~> 0.37'
-  gem.add_development_dependency 'rubocop-rspec',   '~> 1.4.0'
+  gem.add_development_dependency 'rubocop',         '~> 0.49'
+  gem.add_development_dependency 'rubocop-rspec',   '~> 1.15.0'
 
   gem.files         = `git ls-files`.split($INPUT_RECORD_SEPARATOR)
   gem.executables   = gem.files.grep(%r{^bin/}).map { |f| File.basename(f) }

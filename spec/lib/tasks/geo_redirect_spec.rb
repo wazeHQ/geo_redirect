@@ -5,7 +5,7 @@ describe 'geo_redirect:fetch_db' do
 
   it 'downloads a GeoIP db to a location' do
     dbfile = Tempfile.new('db')
-    subject.invoke(dbfile.path)
+    task.invoke(dbfile.path)
     expect(dbfile.size).to be > 0
   end
 end

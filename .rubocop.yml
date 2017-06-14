@@ -9,6 +9,10 @@ Metrics/MethodLength:
 Metrics/ClassLength:
   Max: 180
 
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/**/*'
+
 Style/RescueModifier:
   Enabled: false
 
@@ -18,15 +22,18 @@ Style/RegexpLiteral:
 RSpec/InstanceVariable:
   Enabled: false
 
+RSpec/NestedGroups:
+  Max: 6
+
 Style/BlockDelimiters:
   Exclude:
     - 'spec/**/*'
 
-Style/BlockEndNewline:
+Layout/BlockEndNewline:
   Exclude:
     - 'spec/**/*'
 
-Style/MultilineBlockLayout:
+Layout/MultilineBlockLayout:
   Exclude:
     - 'spec/**/*'
 

@@ -3,10 +3,11 @@
 require 'rake'
 
 shared_context 'rake' do
+  subject(:task)  { rake[task_name] }
+
   let(:rake)      { Rake::Application.new }
   let(:task_name) { self.class.top_level_description }
   let(:task_path) { "lib/tasks/#{task_name.split(':').first}" }
-  subject         { rake[task_name] }
 
   before do
     Rake.application = rake

@@ -21,10 +21,11 @@ module GeoRedirect
       end
 
       @logfile = Tempfile.new('log')
-      options = { config: fixture_path('config.yml'),
-                  db: fixture_path('GeoIP.dat'),
-                  logfile: @logfile.path
-                }.merge(options)
+      options = {
+        config: fixture_path('config.yml'),
+        db: fixture_path('GeoIP.dat'),
+        logfile: @logfile.path
+      }.merge(options)
 
       builder = Rack::Builder.new
       builder.use GeoRedirect::Middleware, options

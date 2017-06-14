@@ -81,11 +81,13 @@ describe GeoRedirect::Middleware do
 
     context 'when country is valid' do
       let(:country) { 'US' }
+
       it { is_expected.to eq(:us) }
     end
 
     context 'when country is invalid' do
       let(:country) { 'WHATEVER' }
+
       it { is_expected.to eq(:default) }
     end
   end
@@ -96,16 +98,22 @@ describe GeoRedirect::Middleware do
 
     context 'when hostname is valid' do
       let(:hostname) { 'biz.waze.co.il' }
+
       it { is_expected.to eq(:il) }
     end
 
     context 'when hostname is invalid' do
       let(:hostname) { 'something.else.org' }
+
       it { is_expected.to eq(:default) }
     end
   end
 
   describe 'redirect logic' do
+    subject(:session) { last_request.env['rack.session'] }
+
+    subject(:response) { last_response }
+
     let(:app_options) { {} }
     let(:request_ip) { '5.5.5.5' }
     let(:request_path) { '/' }
@@ -128,9 +136,6 @@ describe GeoRedirect::Middleware do
       allow(@app.db).to receive(:country).with(request_ip).and_return(country)
       get request_path, request_args, env
     end
-
-    subject(:session) { last_request.env['rack.session'] }
-    subject { last_response }
 
     matcher :redirect_to do |expected|
       match do |response|
@@ -165,6 +170,7 @@ describe GeoRedirect::Middleware do
     context 'without session memory' do
       context 'for a foreign source' do
         let(:country_code) { 'US' }
+
         it { is_expected.to redirect_to :us }
         it { is_expected.to remember :us }
         it { is_expected.to remember_country 'US' }
@@ -172,6 +178,7 @@ describe GeoRedirect::Middleware do
 
       context 'for a local source' do
         let(:country_code) { 'IL' }
+
         it { is_expected.to not_redirect }
         it { is_expected.to remember :il }
         it { is_expected.to remember_country 'IL' }
@@ -179,6 +186,7 @@ describe GeoRedirect::Middleware do
 
       context 'for an unknown source' do
         let(:country_code) { 'SOMEWHERE OVER THE RAINBOW' }
+
         it { is_expected.to redirect_to :default }
         it { is_expected.to remember :default }
         it { is_expected.to remember_country 'SOMEWHERE OVER THE RAINBOW' }
@@ -188,6 +196,7 @@ describe GeoRedirect::Middleware do
     context 'with valid session memory' do
       let(:request_session) { :default }
       let(:country_code) { 'US' }
+
       it { is_expected.to redirect_to :default }
       it { is_expected.to remember :default }
       it { is_expected.to remember_country 'US' }
@@ -212,7 +221,7 @@ describe GeoRedirect::Middleware do
 
       it { is_expected.to redirect_to :il }
       it 'rewrites the flag out' do
-        expect(subject.headers['Location']).not_to include('redirect=1')
+        expect(response.headers['Location']).not_to include('redirect=1')
       end
 
       it { is_expected.to remember :il }
@@ -222,6 +231,7 @@ describe GeoRedirect::Middleware do
     context 'with skip flag' do
       let(:country_code) { 'US' }
       let(:request_args) { { skip_geo: true } }
+
       it { is_expected.to not_redirect }
       it { is_expected.to remember nil }
       it { is_expected.to remember_country nil }
@@ -230,6 +240,7 @@ describe GeoRedirect::Middleware do
         let(:app_options) { { remember_when_skipping: true } }
         let(:country_code) { 'IL' }
         let(:request_args) { { skip_geo: true } }
+
         it { is_expected.to not_redirect }
         it { is_expected.to remember :il }
         it { is_expected.to remember_country nil }
@@ -239,6 +250,7 @@ describe GeoRedirect::Middleware do
         let(:app_options) { { remember_when_skipping: false } }
         let(:country_code) { 'IL' }
         let(:request_args) { { skip_geo: true } }
+
         it { is_expected.to not_redirect }
         it { is_expected.to remember nil }
         it { is_expected.to remember_country nil }
@@ -247,6 +259,7 @@ describe GeoRedirect::Middleware do
 
     context 'with no recognizable IP' do
       let(:country_code) { nil }
+
       it { is_expected.to not_redirect }
       it { is_expected.to remember nil }
       it { is_expected.to remember_country nil }
@@ -257,6 +270,7 @@ describe GeoRedirect::Middleware do
 
       context 'when returns true' do
         let(:app_options) { { skip_if: ->(_req) { true } } }
+
         it { is_expected.to not_redirect }
         it { is_expected.to remember nil }
         it { is_expected.to remember_country nil }
@@ -264,6 +278,7 @@ describe GeoRedirect::Middleware do
 
       context 'when returns false' do
         let(:app_options) { { skip_if: ->(_req) { false } } }
+
         it { is_expected.to redirect_to :us }
         it { is_expected.to remember :us }
         it { is_expected.to remember_country 'US' }
@@ -289,15 +304,17 @@ describe GeoRedirect::Middleware do
         let(:app_options) { { include: include_value } }
 
         context 'when include is an array of paths' do
-          let(:include_value) { %w(/include_me /include_me/too) }
+          let(:include_value) { %w[/include_me /include_me/too] }
 
           context 'when request URL matches one of the included paths' do
             let(:request_path) { '/include_me?query_param=value' }
+
             it_behaves_like :does_not_skip_redirect
           end
 
           context 'when request URL does not match any of the included paths' do
             let(:request_path) { '/dont_include_me?query_param=value' }
+
             it_behaves_like :skips_redirect
           end
         end
@@ -307,11 +324,13 @@ describe GeoRedirect::Middleware do
 
           context 'when request URL matches one of the included paths' do
             let(:request_path) { '/include_me?query_param=value' }
+
             it_behaves_like :does_not_skip_redirect
           end
 
           context 'when request URL does not match any of the included paths' do
             let(:request_path) { '/dont_include_me?query_param=value' }
+
             it_behaves_like :skips_redirect
           end
         end
@@ -321,15 +340,17 @@ describe GeoRedirect::Middleware do
         let(:app_options) { { exclude: exclude_value } }
 
         context 'when exclude is an array of paths' do
-          let(:exclude_value) { %w(/exclude_me /exclude_me/too) }
+          let(:exclude_value) { %w[/exclude_me /exclude_me/too] }
 
           context 'when request URL matches one of the excluded paths' do
             let(:request_path) { '/exclude_me?query_param=value' }
+
             it_behaves_like :skips_redirect
           end
 
           context 'when request URL does not match any of the excluded paths' do
             let(:request_path) { '/dont_exclude_me?query_param=value' }
+
             it_behaves_like :does_not_skip_redirect
           end
         end
@@ -339,11 +360,13 @@ describe GeoRedirect::Middleware do
 
           context 'when request URL matches the excluded path' do
             let(:request_path) { '/exclude_me?query_param=value' }
+
             it_behaves_like :skips_redirect
           end
 
           context 'when request URL does not match any of the excluded paths' do
             let(:request_path) { '/dont_exclude_me?query_param=value' }
+
             it_behaves_like :does_not_skip_redirect
           end
         end
