@@ -93,7 +93,7 @@ module GeoRedirect
     def handle_geoip
       country = country_from_request rescue nil
       @request.session['geo_redirect.country'] = country
-      log "GeoIP match: country code #{country}"
+      log "GeoIP match: country code #{country.inspect}"
 
       if country.nil?
         @app.call(@request.env)
