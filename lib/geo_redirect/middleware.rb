@@ -75,7 +75,7 @@ module GeoRedirect
 
     def path_not_whitelisted?(url)
       !@include_paths.empty? &&
-        !@include_paths.any? { |exclude| url.path == exclude }
+        @include_paths.none? { |include| url.path == include }
     end
 
     def path_blacklisted?(url)
